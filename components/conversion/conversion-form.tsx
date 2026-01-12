@@ -75,11 +75,11 @@ export function ConversionForm({ indicators, onConvert }: ConversionFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <div className="flex flex-col gap-1.5">
         <label
           htmlFor="amount"
-          className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+          className="text-sm font-medium text-zinc-900 dark:text-zinc-100"
         >
           Monto
         </label>
@@ -91,14 +91,14 @@ export function ConversionForm({ indicators, onConvert }: ConversionFormProps) {
           value={amount}
           onChange={handleAmountChange}
           placeholder="Ingresa el monto"
-          className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-zinc-500"
+          className="h-11 rounded-lg border border-zinc-300 bg-white px-3 text-base text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-zinc-500 dark:focus:ring-zinc-400/20"
         />
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5">
         <label
           htmlFor="from"
-          className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+          className="text-sm font-medium text-zinc-900 dark:text-zinc-100"
         >
           Desde
         </label>
@@ -106,7 +106,7 @@ export function ConversionForm({ indicators, onConvert }: ConversionFormProps) {
           id="from"
           value={fromCode}
           onChange={handleFromChange}
-          className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:border-zinc-500"
+          className="h-11 rounded-lg border border-zinc-300 bg-white px-3 text-base text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-zinc-500 dark:focus:ring-zinc-400/20"
         >
           <option value="">Selecciona un indicador</option>
           {allOptions.map((indicator) => (
@@ -117,10 +117,10 @@ export function ConversionForm({ indicators, onConvert }: ConversionFormProps) {
         </select>
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5">
         <label
           htmlFor="to"
-          className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+          className="text-sm font-medium text-zinc-900 dark:text-zinc-100"
         >
           Hacia
         </label>
@@ -128,7 +128,7 @@ export function ConversionForm({ indicators, onConvert }: ConversionFormProps) {
           id="to"
           value={toCode}
           onChange={handleToChange}
-          className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:border-zinc-500"
+          className="h-11 rounded-lg border border-zinc-300 bg-white px-3 text-base text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-zinc-500 dark:focus:ring-zinc-400/20"
         >
           <option value="">Selecciona un indicador</option>
           {allOptions.map((indicator) => (
@@ -140,12 +140,14 @@ export function ConversionForm({ indicators, onConvert }: ConversionFormProps) {
       </div>
 
       {error && (
-        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 dark:border-red-900 dark:bg-red-950">
+          <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+        </div>
       )}
 
       <button
         type="submit"
-        className="rounded-lg bg-zinc-900 px-4 py-2 font-medium text-white hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:focus:ring-offset-zinc-900"
+        className="mt-1 h-11 rounded-lg bg-zinc-900 px-4 text-base font-medium text-white hover:bg-zinc-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 focus-visible:ring-offset-2 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:focus-visible:ring-zinc-400 dark:focus-visible:ring-offset-zinc-950"
       >
         Convertir
       </button>

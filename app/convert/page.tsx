@@ -16,17 +16,17 @@ export default async function ConvertPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-start justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
-        <h1 className="mb-6 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-          Convertir Indicadores
-        </h1>
-        {error ? (
-          <p className="text-center text-red-600 dark:text-red-400">{error}</p>
-        ) : (
-          <ConversionClient indicators={indicators} />
-        )}
-      </main>
+    <div>
+      <h1 className="mb-6 text-xl font-semibold text-zinc-900 dark:text-zinc-50 sm:text-2xl">
+        Convertir Indicadores
+      </h1>
+      {error ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950">
+          <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+        </div>
+      ) : (
+        <ConversionClient indicators={indicators} />
+      )}
     </div>
   );
 }

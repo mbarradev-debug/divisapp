@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getIndicatorByCode, MindicadorApiError } from '@/lib/api/mindicador';
 import { IndicatorHeader } from '@/components/detail/indicator-header';
@@ -17,6 +18,25 @@ export default async function IndicatorPage({ params }: IndicatorPageProps) {
 
     return (
       <div>
+        <Link
+          href="/"
+          className="mb-4 inline-flex items-center gap-1 text-sm text-zinc-600 hover:text-zinc-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 focus-visible:ring-offset-2 dark:text-zinc-400 dark:hover:text-zinc-100 dark:focus-visible:ring-offset-zinc-950"
+        >
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+          Volver
+        </Link>
         <IndicatorHeader
           nombre={data.nombre}
           unidadMedida={data.unidad_medida}
@@ -30,8 +50,8 @@ export default async function IndicatorPage({ params }: IndicatorPageProps) {
     }
 
     return (
-      <div className="text-center">
-        <p className="text-red-600 dark:text-red-400">
+      <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950">
+        <p className="text-sm text-red-700 dark:text-red-400">
           Error al cargar el indicador. Intente nuevamente más tarde.
         </p>
       </div>

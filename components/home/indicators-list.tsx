@@ -8,14 +8,14 @@ interface IndicatorsListProps {
 export function IndicatorsList({ indicators }: IndicatorsListProps) {
   if (indicators.length === 0) {
     return (
-      <p className="text-center text-zinc-500 dark:text-zinc-400">
+      <p className="py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
         No hay indicadores disponibles.
       </p>
     );
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="grid gap-3 sm:grid-cols-2">
       {indicators.map((indicator) => (
         <IndicatorItem key={indicator.codigo} indicator={indicator} />
       ))}
