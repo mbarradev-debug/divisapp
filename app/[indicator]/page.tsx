@@ -13,48 +13,54 @@ interface IndicatorPageProps {
 export default async function IndicatorPage({ params }: IndicatorPageProps) {
   const { indicator } = await params;
 
-  try {
-    const data = await getIndicatorByCode(indicator);
+  let data: Awaited<ReturnType<typeof getIndicatorByCode>> | null = null;
+  let error: string | null = null;
 
-    return (
-      <div>
-        <Link
-          href="/"
-          className="mb-4 inline-flex items-center gap-1 text-sm text-zinc-600 hover:text-zinc-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 focus-visible:ring-offset-2 dark:text-zinc-400 dark:hover:text-zinc-100 dark:focus-visible:ring-offset-zinc-950"
-        >
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-          Volver
-        </Link>
-        <IndicatorHeader
-          nombre={data.nombre}
-          unidadMedida={data.unidad_medida}
-        />
-        <IndicatorSeriesList serie={data.serie.slice(0, 10)} />
-      </div>
-    );
-  } catch (error) {
-    if (error instanceof MindicadorApiError && error.status === 404) {
+  try {
+    data = await getIndicatorByCode(indicator);
+  } catch (err) {
+    if (err instanceof MindicadorApiError && err.status === 404) {
       notFound();
     }
+    error = 'Error al cargar el indicador. Intente nuevamente más tarde.';
+  }
 
+  if (error || !data) {
     return (
       <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950">
         <p className="text-sm text-red-700 dark:text-red-400">
-          Error al cargar el indicador. Intente nuevamente más tarde.
+          {error || 'Error al cargar el indicador.'}
         </p>
       </div>
     );
   }
+
+  return (
+    <div>
+      <Link
+        href="/"
+        className="mb-4 inline-flex items-center gap-1 text-sm text-zinc-600 hover:text-zinc-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 focus-visible:ring-offset-2 dark:text-zinc-400 dark:hover:text-zinc-100 dark:focus-visible:ring-offset-zinc-950"
+      >
+        <svg
+          className="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+        Volver
+      </Link>
+      <IndicatorHeader
+        nombre={data.nombre}
+        unidadMedida={data.unidad_medida}
+      />
+      <IndicatorSeriesList serie={data.serie.slice(0, 10)} />
+    </div>
+  );
 }

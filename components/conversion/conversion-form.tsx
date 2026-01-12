@@ -7,7 +7,7 @@ const CLP_INDICATOR: IndicatorValue = {
   codigo: 'clp',
   nombre: 'Peso Chileno',
   unidad_medida: 'Pesos',
-  fecha: new Date().toISOString(),
+  fecha: '',
   valor: 1,
 };
 

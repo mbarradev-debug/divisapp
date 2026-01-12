@@ -28,6 +28,12 @@ export function ConversionClient({ indicators }: ConversionClientProps) {
     fromIndicator: IndicatorValue;
     toIndicator: IndicatorValue;
   }) => {
+    // Validate indicator values to prevent invalid calculations
+    if (!fromIndicator.valor || !toIndicator.valor || toIndicator.valor === 0) {
+      setConversion(null);
+      return;
+    }
+
     // Convert: amount in "from" units → CLP → "to" units
     // fromIndicator.valor = how many CLP per 1 unit of "from"
     // toIndicator.valor = how many CLP per 1 unit of "to"
