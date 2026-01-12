@@ -3,6 +3,14 @@
 import { useState } from 'react';
 import { IndicatorValue } from '@/lib/api/mindicador';
 
+const CLP_INDICATOR: IndicatorValue = {
+  codigo: 'clp',
+  nombre: 'Peso Chileno',
+  unidad_medida: 'Pesos',
+  fecha: new Date().toISOString(),
+  valor: 1,
+};
+
 interface ConversionFormProps {
   indicators: IndicatorValue[];
   onConvert: (params: {
@@ -17,6 +25,8 @@ export function ConversionForm({ indicators, onConvert }: ConversionFormProps) {
   const [fromCode, setFromCode] = useState('');
   const [toCode, setToCode] = useState('');
   const [error, setError] = useState<string | null>(null);
+
+  const allOptions = [CLP_INDICATOR, ...indicators];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,8 +48,8 @@ export function ConversionForm({ indicators, onConvert }: ConversionFormProps) {
       return;
     }
 
-    const fromIndicator = indicators.find((i) => i.codigo === fromCode);
-    const toIndicator = indicators.find((i) => i.codigo === toCode);
+    const fromIndicator = allOptions.find((i) => i.codigo === fromCode);
+    const toIndicator = allOptions.find((i) => i.codigo === toCode);
 
     if (!fromIndicator || !toIndicator) {
       setError('Indicador no encontrado');
@@ -99,7 +109,7 @@ export function ConversionForm({ indicators, onConvert }: ConversionFormProps) {
           className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:border-zinc-500"
         >
           <option value="">Selecciona un indicador</option>
-          {indicators.map((indicator) => (
+          {allOptions.map((indicator) => (
             <option key={indicator.codigo} value={indicator.codigo}>
               {indicator.nombre} ({indicator.unidad_medida})
             </option>
@@ -121,7 +131,7 @@ export function ConversionForm({ indicators, onConvert }: ConversionFormProps) {
           className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:border-zinc-500"
         >
           <option value="">Selecciona un indicador</option>
-          {indicators.map((indicator) => (
+          {allOptions.map((indicator) => (
             <option key={indicator.codigo} value={indicator.codigo}>
               {indicator.nombre} ({indicator.unidad_medida})
             </option>
