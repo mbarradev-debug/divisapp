@@ -7,7 +7,7 @@ import { LineChartBase, ChartDataPoint } from '@/components/ui/line-chart-base';
 import { RangeSelector } from './range-selector';
 import { IndicatorSeriesList } from './indicator-series-list';
 
-type RangeOption = 7 | 30;
+type RangeOption = 7 | 30 | 90;
 
 interface IndicatorHistoryProps {
   serie: SerieItem[];
