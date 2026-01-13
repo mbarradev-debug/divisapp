@@ -1,5 +1,5 @@
 import { getAllIndicators, IndicatorValue } from '@/lib/api/mindicador';
-import { IndicatorsList } from '@/components/home/indicators-list';
+import { HomeIndicators } from '@/components/home/home-indicators';
 
 export default async function Home() {
   let indicators: IndicatorValue[] = [];
@@ -25,7 +25,7 @@ export default async function Home() {
           <p className="text-[length:var(--text-label)] leading-[var(--leading-label)] text-error-text">{error}</p>
         </div>
       ) : (
-        <IndicatorsList indicators={indicators} />
+        <HomeIndicators indicators={indicators} />
       )}
     </div>
   );

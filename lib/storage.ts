@@ -203,8 +203,10 @@ function getFavoritesSnapshot(): FavoritesState {
   return cachedFavorites;
 }
 
+const emptyFavorites: FavoritesState = [];
+
 function getFavoritesServerSnapshot(): FavoritesState {
-  return [];
+  return emptyFavorites;
 }
 
 function updateFavorites(newFavorites: FavoritesState): void {
