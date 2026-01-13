@@ -1,3 +1,5 @@
+import { Card } from '@/components/ui';
+
 interface ConversionResultProps {
   amount: number;
   fromName: string;
@@ -12,7 +14,7 @@ export function ConversionResult({
   result,
 }: ConversionResultProps) {
   return (
-    <div className="rounded-lg border border-border bg-bg-subtle p-4">
+    <Card>
       <p className="text-[length:var(--text-label)] leading-[var(--leading-label)] text-text-secondary">
         {amount.toLocaleString('es-CL')} {fromName} equivale a
       </p>
@@ -22,7 +24,9 @@ export function ConversionResult({
           maximumFractionDigits: 4,
         })}
       </p>
-      <p className="mt-1 text-[length:var(--text-label)] leading-[var(--leading-label)] text-text-muted">{toName}</p>
-    </div>
+      <p className="mt-1 text-[length:var(--text-label)] leading-[var(--leading-label)] text-text-muted">
+        {toName}
+      </p>
+    </Card>
   );
 }

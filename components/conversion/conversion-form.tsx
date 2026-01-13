@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { IndicatorValue } from '@/lib/api/mindicador';
+import { Button, Input, Select } from '@/components/ui';
 
 const CLP_INDICATOR: IndicatorValue = {
   codigo: 'clp',
@@ -27,6 +28,11 @@ export function ConversionForm({ indicators, onConvert }: ConversionFormProps) {
   const [error, setError] = useState<string | null>(null);
 
   const allOptions = [CLP_INDICATOR, ...indicators];
+
+  const selectOptions = allOptions.map((indicator) => ({
+    value: indicator.codigo,
+    label: `${indicator.nombre} (${indicator.unidad_medida})`,
+  }));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,81 +82,47 @@ export function ConversionForm({ indicators, onConvert }: ConversionFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-      <div className="flex flex-col gap-1.5">
-        <label
-          htmlFor="amount"
-          className="text-[length:var(--text-label)] font-medium leading-[var(--leading-label)] text-text"
-        >
-          Monto
-        </label>
-        <input
-          id="amount"
-          type="number"
-          step="any"
-          min="0"
-          value={amount}
-          onChange={handleAmountChange}
-          placeholder="Ingresa el monto"
-          className="h-11 rounded-lg border border-border-strong bg-bg-subtle px-3 text-[length:var(--text-body)] leading-[var(--leading-body)] text-text placeholder:text-text-placeholder focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
-        />
-      </div>
+      <Input
+        id="amount"
+        label="Monto"
+        type="number"
+        step="any"
+        min="0"
+        value={amount}
+        onChange={handleAmountChange}
+        placeholder="Ingresa el monto"
+        error={!!error}
+      />
 
-      <div className="flex flex-col gap-1.5">
-        <label
-          htmlFor="from"
-          className="text-[length:var(--text-label)] font-medium leading-[var(--leading-label)] text-text"
-        >
-          Desde
-        </label>
-        <select
-          id="from"
-          value={fromCode}
-          onChange={handleFromChange}
-          className="h-11 rounded-lg border border-border-strong bg-bg-subtle px-3 text-[length:var(--text-body)] leading-[var(--leading-body)] text-text focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
-        >
-          <option value="">Selecciona un indicador</option>
-          {allOptions.map((indicator) => (
-            <option key={indicator.codigo} value={indicator.codigo}>
-              {indicator.nombre} ({indicator.unidad_medida})
-            </option>
-          ))}
-        </select>
-      </div>
+      <Select
+        id="from"
+        label="Desde"
+        value={fromCode}
+        onChange={handleFromChange}
+        options={selectOptions}
+        placeholder="Selecciona un indicador"
+      />
 
-      <div className="flex flex-col gap-1.5">
-        <label
-          htmlFor="to"
-          className="text-[length:var(--text-label)] font-medium leading-[var(--leading-label)] text-text"
-        >
-          Hacia
-        </label>
-        <select
-          id="to"
-          value={toCode}
-          onChange={handleToChange}
-          className="h-11 rounded-lg border border-border-strong bg-bg-subtle px-3 text-[length:var(--text-body)] leading-[var(--leading-body)] text-text focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
-        >
-          <option value="">Selecciona un indicador</option>
-          {allOptions.map((indicator) => (
-            <option key={indicator.codigo} value={indicator.codigo}>
-              {indicator.nombre} ({indicator.unidad_medida})
-            </option>
-          ))}
-        </select>
-      </div>
+      <Select
+        id="to"
+        label="Hacia"
+        value={toCode}
+        onChange={handleToChange}
+        options={selectOptions}
+        placeholder="Selecciona un indicador"
+      />
 
       {error && (
         <div className="rounded-lg border border-error-border bg-error-bg px-3 py-2">
-          <p className="text-[length:var(--text-label)] leading-[var(--leading-label)] text-error-text">{error}</p>
+          <p className="text-[length:var(--text-label)] leading-[var(--leading-label)] text-error-text">
+            {error}
+          </p>
         </div>
       )}
 
-      <button
-        type="submit"
-        className="mt-1 h-11 rounded-lg bg-primary px-4 text-[length:var(--text-body)] font-medium leading-[var(--leading-body)] text-primary-foreground hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset"
-      >
+      <Button type="submit" fullWidth className="mt-1">
         Convertir
-      </button>
+      </Button>
     </form>
   );
 }

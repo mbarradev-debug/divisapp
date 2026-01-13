@@ -8,7 +8,7 @@ interface IndicatorsListProps {
 export function IndicatorsList({ indicators }: IndicatorsListProps) {
   if (indicators.length === 0) {
     return (
-      <p className="py-8 text-center text-[length:var(--text-label)] leading-[var(--leading-label)] text-zinc-500 dark:text-zinc-400">
+      <p className="py-8 text-center text-[length:var(--text-label)] leading-[var(--leading-label)] text-text-muted">
         No hay indicadores disponibles.
       </p>
     );

@@ -9,7 +9,7 @@ export function IndicatorItem({ indicator }: IndicatorItemProps) {
   return (
     <Link
       href={`/${indicator.codigo}`}
-      className="block rounded-lg border border-border bg-bg-subtle p-4 hover:border-border-strong hover:bg-bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset"
+      className="block rounded-lg border border-border-subtle bg-bg-subtle p-4 hover:border-border hover:bg-bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset"
     >
       <p className="text-[length:var(--text-label)] font-medium leading-[var(--leading-label)] text-text">
         {indicator.nombre}
