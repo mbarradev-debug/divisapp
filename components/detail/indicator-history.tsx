@@ -18,8 +18,10 @@ interface IndicatorHistoryProps {
 export function IndicatorHistory({ serie, unidadMedida }: IndicatorHistoryProps) {
   const [range, setRange] = useState<RangeOption>(7);
 
-  const displayedSerie = serie.slice(0, range);
+  // Memoize filtered history range to avoid recalculating on unrelated re-renders
+  const displayedSerie = useMemo(() => serie.slice(0, range), [serie, range]);
 
+  // Memoize chart data - depends on displayedSerie which is now stable
   const chartData: ChartDataPoint[] = useMemo(() => {
     return [...displayedSerie]
       .reverse()
@@ -29,27 +31,37 @@ export function IndicatorHistory({ serie, unidadMedida }: IndicatorHistoryProps)
       }));
   }, [displayedSerie]);
 
+  // Memoize min/max calculations
+  const { min, max } = useMemo(() => {
+    const values = displayedSerie
+      .map((item) => item.valor)
+      .filter((v): v is number => typeof v === 'number' && !Number.isNaN(v));
+
+    return {
+      min: values.length >= 2 ? Math.min(...values) : null,
+      max: values.length >= 2 ? Math.max(...values) : null,
+    };
+  }, [displayedSerie]);
+
+  // Memoize trend delta calculation
+  const delta = useMemo(() => {
+    const firstValue = displayedSerie[0]?.valor;
+    const lastValue = displayedSerie[displayedSerie.length - 1]?.valor;
+
+    if (
+      typeof firstValue === 'number' &&
+      typeof lastValue === 'number' &&
+      !Number.isNaN(firstValue) &&
+      !Number.isNaN(lastValue)
+    ) {
+      return firstValue - lastValue;
+    }
+    return null;
+  }, [displayedSerie]);
+
   if (serie.length === 0) {
     return null;
   }
-
-  const values = displayedSerie
-    .map((item) => item.valor)
-    .filter((v): v is number => typeof v === 'number' && !Number.isNaN(v));
-
-  const min = values.length >= 2 ? Math.min(...values) : null;
-  const max = values.length >= 2 ? Math.max(...values) : null;
-
-  // Delta: most recent value (first) minus oldest value (last in range)
-  const firstValue = displayedSerie[0]?.valor;
-  const lastValue = displayedSerie[displayedSerie.length - 1]?.valor;
-  const delta =
-    typeof firstValue === 'number' &&
-    typeof lastValue === 'number' &&
-    !Number.isNaN(firstValue) &&
-    !Number.isNaN(lastValue)
-      ? firstValue - lastValue
-      : null;
 
   return (
     <div className="space-y-3">
