@@ -22,7 +22,7 @@ interface LineChartBaseProps {
 
 export function LineChartBase({
   data,
-  height = 200,
+  height = 160,
   className = '',
 }: LineChartBaseProps) {
   if (data.length === 0) {
@@ -34,7 +34,7 @@ export function LineChartBase({
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={data}
-          margin={{ top: 8, right: 8, left: 8, bottom: 8 }}
+          margin={{ top: 8, right: 0, left: 0, bottom: 0 }}
         >
           <CartesianGrid
             strokeDasharray="3 3"
@@ -47,7 +47,7 @@ export function LineChartBase({
             type="monotone"
             dataKey="y"
             stroke="var(--chart-line)"
-            strokeWidth={2}
+            strokeWidth={2.5}
             dot={false}
             isAnimationActive={false}
           />
