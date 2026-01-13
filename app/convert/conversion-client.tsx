@@ -13,6 +13,7 @@ interface ConversionData {
   amount: number;
   fromName: string;
   toName: string;
+  toUnit: string;
   result: number;
 }
 
@@ -28,15 +29,11 @@ export function ConversionClient({ indicators }: ConversionClientProps) {
     fromIndicator: IndicatorValue;
     toIndicator: IndicatorValue;
   }) => {
-    // Validate indicator values to prevent invalid calculations
     if (!fromIndicator.valor || !toIndicator.valor || toIndicator.valor === 0) {
       setConversion(null);
       return;
     }
 
-    // Convert: amount in "from" units → CLP → "to" units
-    // fromIndicator.valor = how many CLP per 1 unit of "from"
-    // toIndicator.valor = how many CLP per 1 unit of "to"
     const clpValue = amount * fromIndicator.valor;
     const result = clpValue / toIndicator.valor;
 
@@ -44,6 +41,7 @@ export function ConversionClient({ indicators }: ConversionClientProps) {
       amount,
       fromName: fromIndicator.nombre,
       toName: toIndicator.nombre,
+      toUnit: toIndicator.unidad_medida,
       result,
     });
   };
@@ -56,6 +54,7 @@ export function ConversionClient({ indicators }: ConversionClientProps) {
           amount={conversion.amount}
           fromName={conversion.fromName}
           toName={conversion.toName}
+          toUnit={conversion.toUnit}
           result={conversion.result}
         />
       )}
