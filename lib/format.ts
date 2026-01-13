@@ -32,7 +32,7 @@ export function formatValue(value: number, unit: string): string {
       return new Intl.NumberFormat(LOCALE, {
         style: 'currency',
         currency: 'CLP',
-        minimumFractionDigits: 0,
+        minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       }).format(value);
 

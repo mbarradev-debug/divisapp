@@ -1,9 +1,12 @@
+import { formatValue } from '@/lib/format';
+
 interface IndicatorSeriesItemProps {
   fecha: string;
   valor: number;
+  unit: string;
 }
 
-export function IndicatorSeriesItem({ fecha, valor }: IndicatorSeriesItemProps) {
+export function IndicatorSeriesItem({ fecha, valor, unit }: IndicatorSeriesItemProps) {
   const formattedDate = new Date(fecha).toLocaleDateString('es-CL', {
     year: 'numeric',
     month: 'short',
@@ -16,7 +19,7 @@ export function IndicatorSeriesItem({ fecha, valor }: IndicatorSeriesItemProps) 
         {formattedDate}
       </span>
       <span className="text-[length:var(--text-body)] font-medium leading-[var(--leading-body)] tabular-nums text-text">
-        {valor.toLocaleString('es-CL')}
+        {formatValue(valor, unit)}
       </span>
     </div>
   );

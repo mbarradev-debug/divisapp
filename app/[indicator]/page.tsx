@@ -60,7 +60,7 @@ export default async function IndicatorPage({ params }: IndicatorPageProps) {
         nombre={data.nombre}
         unidadMedida={data.unidad_medida}
       />
-      <IndicatorSeriesList serie={data.serie.slice(0, 10)} />
+      <IndicatorSeriesList serie={data.serie.slice(0, 10)} unidadMedida={data.unidad_medida} />
     </div>
   );
 }

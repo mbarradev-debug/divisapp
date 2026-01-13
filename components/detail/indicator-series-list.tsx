@@ -4,9 +4,10 @@ import { Card } from '@/components/ui';
 
 interface IndicatorSeriesListProps {
   serie: SerieItem[];
+  unidadMedida: string;
 }
 
-export function IndicatorSeriesList({ serie }: IndicatorSeriesListProps) {
+export function IndicatorSeriesList({ serie, unidadMedida }: IndicatorSeriesListProps) {
   if (serie.length === 0) {
     return (
       <p className="py-8 text-center text-[length:var(--text-label)] leading-[var(--leading-label)] text-text-muted">
@@ -23,6 +24,7 @@ export function IndicatorSeriesList({ serie }: IndicatorSeriesListProps) {
             key={item.fecha}
             fecha={item.fecha}
             valor={item.valor}
+            unit={unidadMedida}
           />
         ))}
       </div>

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { IndicatorValue } from '@/lib/api/mindicador';
+import { formatValue } from '@/lib/format';
 
 interface IndicatorItemProps {
   indicator: IndicatorValue;
@@ -15,10 +16,7 @@ export function IndicatorItem({ indicator }: IndicatorItemProps) {
         {indicator.nombre}
       </p>
       <p className="mt-1 text-[length:var(--text-value)] font-semibold leading-[var(--leading-value)] tabular-nums text-text">
-        {indicator.valor.toLocaleString('es-CL')}
-      </p>
-      <p className="mt-0.5 text-[length:var(--text-small)] leading-[var(--leading-small)] text-text-muted">
-        {indicator.unidad_medida}
+        {formatValue(indicator.valor, indicator.unidad_medida)}
       </p>
     </Link>
   );
