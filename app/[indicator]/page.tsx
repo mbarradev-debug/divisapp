@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getIndicatorByCode, MindicadorApiError } from '@/lib/api/mindicador';
 import { IndicatorHeader } from '@/components/detail/indicator-header';
-import { IndicatorSeriesList } from '@/components/detail/indicator-series-list';
+import { IndicatorHistory } from '@/components/detail/indicator-history';
 
 interface IndicatorPageProps {
   params: Promise<{
@@ -62,7 +62,7 @@ export default async function IndicatorPage({ params }: IndicatorPageProps) {
         valorActual={data.serie[0]?.valor}
         valorAnterior={data.serie[1]?.valor}
       />
-      <IndicatorSeriesList serie={data.serie.slice(0, 10)} unidadMedida={data.unidad_medida} />
+      <IndicatorHistory serie={data.serie} unidadMedida={data.unidad_medida} />
     </div>
   );
 }
