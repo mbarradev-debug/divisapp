@@ -1,6 +1,8 @@
 import { formatValue, formatVariation } from '@/lib/format';
+import { FavoriteButton } from '@/components/ui/favorite-button';
 
 interface IndicatorHeaderProps {
+  codigo: string;
   nombre: string;
   unidadMedida: string;
   valorActual?: number;
@@ -8,6 +10,7 @@ interface IndicatorHeaderProps {
 }
 
 export function IndicatorHeader({
+  codigo,
   nombre,
   unidadMedida,
   valorActual,
@@ -26,9 +29,12 @@ export function IndicatorHeader({
 
   return (
     <div className="mb-6">
-      <h1 className="text-[length:var(--text-title)] font-semibold leading-[var(--leading-title)] text-text">
-        {nombre}
-      </h1>
+      <div className="flex items-start justify-between gap-2">
+        <h1 className="text-[length:var(--text-title)] font-semibold leading-[var(--leading-title)] text-text">
+          {nombre}
+        </h1>
+        <FavoriteButton codigo={codigo} nombre={nombre} />
+      </div>
       <p className="mt-1 text-[length:var(--text-label)] leading-[var(--leading-label)] text-text-muted">
         {unidadMedida}
       </p>

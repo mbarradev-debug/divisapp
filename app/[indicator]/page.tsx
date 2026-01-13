@@ -57,6 +57,7 @@ export default async function IndicatorPage({ params }: IndicatorPageProps) {
         Volver
       </Link>
       <IndicatorHeader
+        codigo={data.codigo}
         nombre={data.nombre}
         unidadMedida={data.unidad_medida}
         valorActual={data.serie[0]?.valor}

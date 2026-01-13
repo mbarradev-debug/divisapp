@@ -1,6 +1,7 @@
 import { useSyncExternalStore, useCallback } from 'react';
 
 const CONVERSION_STORAGE_KEY = 'divisapp_last_conversion';
+const FAVORITES_STORAGE_KEY = 'divisapp_favorites';
 
 export interface ConversionResultSnapshot {
   amount: number;
@@ -149,5 +150,98 @@ export function usePersistedConversion(): UsePersistedConversionReturn {
     setFromCode,
     setToCode,
     setResult,
+  };
+}
+
+// Favorites storage
+
+type FavoritesState = string[];
+
+function getStoredFavorites(): FavoritesState {
+  if (typeof window === 'undefined') return [];
+
+  try {
+    const stored = localStorage.getItem(FAVORITES_STORAGE_KEY);
+    if (!stored) return [];
+
+    const parsed = JSON.parse(stored);
+
+    if (Array.isArray(parsed) && parsed.every((item) => typeof item === 'string')) {
+      return parsed;
+    }
+
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+function setStoredFavorites(favorites: FavoritesState): void {
+  if (typeof window === 'undefined') return;
+
+  try {
+    localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favorites));
+  } catch {
+    // Silently fail if localStorage is unavailable
+  }
+}
+
+let favoritesListeners: Array<() => void> = [];
+let cachedFavorites: FavoritesState | null = null;
+
+function subscribeFavorites(listener: () => void): () => void {
+  favoritesListeners = [...favoritesListeners, listener];
+  return () => {
+    favoritesListeners = favoritesListeners.filter((l) => l !== listener);
+  };
+}
+
+function getFavoritesSnapshot(): FavoritesState {
+  if (cachedFavorites === null) {
+    cachedFavorites = getStoredFavorites();
+  }
+  return cachedFavorites;
+}
+
+function getFavoritesServerSnapshot(): FavoritesState {
+  return [];
+}
+
+function updateFavorites(newFavorites: FavoritesState): void {
+  cachedFavorites = newFavorites;
+  setStoredFavorites(newFavorites);
+  favoritesListeners.forEach((listener) => listener());
+}
+
+interface UseFavoritesReturn {
+  favorites: FavoritesState;
+  isFavorite: (codigo: string) => boolean;
+  toggleFavorite: (codigo: string) => void;
+}
+
+export function useFavorites(): UseFavoritesReturn {
+  const favorites = useSyncExternalStore(
+    subscribeFavorites,
+    getFavoritesSnapshot,
+    getFavoritesServerSnapshot
+  );
+
+  const isFavorite = useCallback(
+    (codigo: string) => favorites.includes(codigo),
+    [favorites]
+  );
+
+  const toggleFavorite = useCallback((codigo: string) => {
+    const current = getFavoritesSnapshot();
+    const newFavorites = current.includes(codigo)
+      ? current.filter((c) => c !== codigo)
+      : [...current, codigo];
+    updateFavorites(newFavorites);
+  }, []);
+
+  return {
+    favorites,
+    isFavorite,
+    toggleFavorite,
   };
 }
