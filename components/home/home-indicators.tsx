@@ -42,14 +42,14 @@ export function HomeIndicators({ indicators }: HomeIndicatorsProps) {
 
   return (
     <>
-      {favoriteIndicators.length > 0 && (
-        <section aria-labelledby="favorites-heading" className="mb-8">
-          <h2
-            id="favorites-heading"
-            className="mb-3 text-[length:var(--text-label)] font-medium leading-[var(--leading-label)] text-text-muted"
-          >
-            Favoritos
-          </h2>
+      <section aria-labelledby="favorites-heading" className="mb-8">
+        <h2
+          id="favorites-heading"
+          className="mb-3 text-[length:var(--text-label)] font-medium leading-[var(--leading-label)] text-text-muted"
+        >
+          Favoritos
+        </h2>
+        {favoriteIndicators.length > 0 ? (
           <div className="grid gap-3 sm:grid-cols-2">
             {favoriteIndicators.map((indicator, index) => (
               <FavoriteIndicatorItem
@@ -60,8 +60,32 @@ export function HomeIndicators({ indicators }: HomeIndicatorsProps) {
               />
             ))}
           </div>
-        </section>
-      )}
+        ) : (
+          <div className="rounded-lg border border-border-subtle bg-bg-subtle px-4 py-3">
+            <p className="text-[length:var(--text-label)] leading-[var(--leading-label)] text-text-muted">
+              No tienes indicadores favoritos.
+            </p>
+            <p className="mt-1 flex items-center gap-1.5 text-[length:var(--text-label)] leading-[var(--leading-label)] text-text-muted/70">
+              <span>Toca</span>
+              <svg
+                className="inline-block h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                />
+              </svg>
+              <span>en un indicador para agregarlo.</span>
+            </p>
+          </div>
+        )}
+      </section>
       {otherIndicators.length === 0 ? (
         <p className="py-8 text-center text-[length:var(--text-label)] leading-[var(--leading-label)] text-text-muted">
           No hay indicadores disponibles.
