@@ -41,6 +41,7 @@ Start here if you want to understand **how the application is built**:
 - [Folder Structure](./architecture/folder-structure.md) - What each folder and file does
 - [Data Flow](./architecture/data-flow.md) - How data moves through the application
 - [Typography](./architecture/typography.md) - Font choice and typography system
+- [Colors](./architecture/colors.md) - Color palette and design tokens
 
 ### Features (`/features`)
 

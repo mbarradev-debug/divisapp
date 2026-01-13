@@ -1,15 +1,153 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fafafa;
-  --foreground: #18181b;
+  /* Background Colors */
+  --bg: #fafafa;
+  --bg-subtle: #ffffff;
+  --bg-muted: #f4f4f5;
+
+  /* Text Colors */
+  --text: #18181b;
+  --text-secondary: #52525b;
+  --text-muted: #71717a;
+  --text-placeholder: #a1a1aa;
+
+  /* Border Colors */
+  --border: #e4e4e7;
+  --border-subtle: #f4f4f5;
+  --border-strong: #d4d4d8;
+
+  /* Primary Colors */
+  --primary: #18181b;
+  --primary-hover: #27272a;
+  --primary-foreground: #ffffff;
+
+  /* Focus Ring */
+  --ring: #71717a;
+  --ring-offset: #fafafa;
+
+  /* Semantic: Error */
+  --error: #dc2626;
+  --error-bg: #fef2f2;
+  --error-border: #fecaca;
+  --error-text: #b91c1c;
+
+  /* Semantic: Success */
+  --success: #16a34a;
+  --success-bg: #f0fdf4;
+  --success-border: #bbf7d0;
+  --success-text: #15803d;
+
+  /* Semantic: Warning */
+  --warning: #d97706;
+  --warning-bg: #fffbeb;
+  --warning-border: #fde68a;
+  --warning-text: #b45309;
+
+  /* Semantic: Info */
+  --info: #2563eb;
+  --info-bg: #eff6ff;
+  --info-border: #bfdbfe;
+  --info-text: #1d4ed8;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Background Colors */
+    --bg: #09090b;
+    --bg-subtle: #18181b;
+    --bg-muted: #27272a;
+
+    /* Text Colors */
+    --text: #fafafa;
+    --text-secondary: #a1a1aa;
+    --text-muted: #a1a1aa;
+    --text-placeholder: #71717a;
+
+    /* Border Colors */
+    --border: #3f3f46;
+    --border-subtle: #27272a;
+    --border-strong: #52525b;
+
+    /* Primary Colors */
+    --primary: #fafafa;
+    --primary-hover: #e4e4e7;
+    --primary-foreground: #18181b;
+
+    /* Focus Ring */
+    --ring: #a1a1aa;
+    --ring-offset: #09090b;
+
+    /* Semantic: Error */
+    --error: #f87171;
+    --error-bg: #450a0a;
+    --error-border: #7f1d1d;
+    --error-text: #fca5a5;
+
+    /* Semantic: Success */
+    --success: #22c55e;
+    --success-bg: #052e16;
+    --success-border: #14532d;
+    --success-text: #86efac;
+
+    /* Semantic: Warning */
+    --warning: #fbbf24;
+    --warning-bg: #451a03;
+    --warning-border: #78350f;
+    --warning-text: #fde68a;
+
+    /* Semantic: Info */
+    --info: #60a5fa;
+    --info-bg: #172554;
+    --info-border: #1e3a8a;
+    --info-text: #93c5fd;
+  }
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Color Tokens */
+  --color-bg: var(--bg);
+  --color-bg-subtle: var(--bg-subtle);
+  --color-bg-muted: var(--bg-muted);
+
+  --color-text: var(--text);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-placeholder: var(--text-placeholder);
+
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-strong: var(--border-strong);
+
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-ring: var(--ring);
+  --color-ring-offset: var(--ring-offset);
+
+  --color-error: var(--error);
+  --color-error-bg: var(--error-bg);
+  --color-error-border: var(--error-border);
+  --color-error-text: var(--error-text);
+
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-success-border: var(--success-border);
+  --color-success-text: var(--success-text);
+
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-warning-border: var(--warning-border);
+  --color-warning-text: var(--warning-text);
+
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+  --color-info-border: var(--info-border);
+  --color-info-text: var(--info-text);
 
   /* Typography Scale */
   /* Page Title: 24px / 32px */
@@ -41,16 +179,9 @@
   --leading-value: 2rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #09090b;
-    --foreground: #fafafa;
-  }
-}
-
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg);
+  color: var(--text);
   font-family: var(--font-sans), system-ui, sans-serif;
   font-size: var(--text-body);
   line-height: var(--leading-body);

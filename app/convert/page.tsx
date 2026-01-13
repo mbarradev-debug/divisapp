@@ -20,7 +20,7 @@ export default async function ConvertPage() {
     <div>
       <Link
         href="/"
-        className="mb-4 inline-flex items-center gap-1 text-[length:var(--text-label)] leading-[var(--leading-label)] text-zinc-600 hover:text-zinc-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 focus-visible:ring-offset-2 dark:text-zinc-400 dark:hover:text-zinc-100 dark:focus-visible:ring-offset-zinc-950"
+        className="mb-4 inline-flex items-center gap-1 text-[length:var(--text-label)] leading-[var(--leading-label)] text-text-secondary hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset"
       >
         <svg
           className="h-4 w-4"
@@ -37,12 +37,12 @@ export default async function ConvertPage() {
         </svg>
         Volver
       </Link>
-      <h1 className="mb-6 text-[length:var(--text-title)] font-semibold leading-[var(--leading-title)] text-zinc-900 dark:text-zinc-50">
+      <h1 className="mb-6 text-[length:var(--text-title)] font-semibold leading-[var(--leading-title)] text-text">
         Convertir Indicadores
       </h1>
       {error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950">
-          <p className="text-[length:var(--text-label)] leading-[var(--leading-label)] text-red-700 dark:text-red-400">{error}</p>
+        <div className="rounded-lg border border-error-border bg-error-bg p-4">
+          <p className="text-[length:var(--text-label)] leading-[var(--leading-label)] text-error-text">{error}</p>
         </div>
       ) : (
         <ConversionClient indicators={indicators} />

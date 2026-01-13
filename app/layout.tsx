@@ -26,20 +26,20 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50`}
+        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased bg-bg text-text`}
       >
         <div className="mx-auto min-h-screen max-w-2xl">
-          <header className="sticky top-0 z-10 border-b border-zinc-200 bg-zinc-50/80 px-4 py-4 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-950/80 sm:px-6">
+          <header className="sticky top-0 z-10 border-b border-border bg-bg/80 px-4 py-4 backdrop-blur-sm sm:px-6">
             <nav className="flex items-center justify-between">
               <Link
                 href="/"
-                className="text-[length:var(--text-section)] font-semibold leading-[var(--leading-section)] text-zinc-900 dark:text-zinc-50"
+                className="text-[length:var(--text-section)] font-semibold leading-[var(--leading-section)] text-text"
               >
                 DivisApp
               </Link>
               <Link
                 href="/convert"
-                className="rounded-md px-3 py-1.5 text-[length:var(--text-label)] font-medium leading-[var(--leading-label)] text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+                className="rounded-md px-3 py-1.5 text-[length:var(--text-label)] font-medium leading-[var(--leading-label)] text-text-secondary hover:bg-bg-muted hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 Convertir
               </Link>
