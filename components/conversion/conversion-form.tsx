@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { IndicatorValue } from '@/lib/api/mindicador';
 import { Button, Input, Select } from '@/components/ui';
+import { usePersistedConversion } from '@/lib/storage';
 
 const CLP_INDICATOR: IndicatorValue = {
   codigo: 'clp',
@@ -22,17 +23,41 @@ interface ConversionFormProps {
 }
 
 export function ConversionForm({ indicators, onConvert }: ConversionFormProps) {
-  const [amount, setAmount] = useState('');
-  const [fromCode, setFromCode] = useState('');
-  const [toCode, setToCode] = useState('');
+  const { amount, fromCode, toCode, setAmount, setFromCode, setToCode } =
+    usePersistedConversion();
   const [error, setError] = useState<string | null>(null);
 
-  const allOptions = [CLP_INDICATOR, ...indicators];
+  const allOptions = useMemo(
+    () => [CLP_INDICATOR, ...indicators],
+    [indicators]
+  );
 
-  const selectOptions = allOptions.map((indicator) => ({
-    value: indicator.codigo,
-    label: `${indicator.nombre} (${indicator.unidad_medida})`,
-  }));
+  const selectOptions = useMemo(
+    () =>
+      allOptions.map((indicator) => ({
+        value: indicator.codigo,
+        label: `${indicator.nombre} (${indicator.unidad_medida})`,
+      })),
+    [allOptions]
+  );
+
+  const performConversion = useCallback(() => {
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) return false;
+    if (!fromCode || !toCode) return false;
+    if (fromCode === toCode) return false;
+
+    const fromIndicator = allOptions.find((i) => i.codigo === fromCode);
+    const toIndicator = allOptions.find((i) => i.codigo === toCode);
+    if (!fromIndicator || !toIndicator) return false;
+
+    onConvert({ amount: parsedAmount, fromIndicator, toIndicator });
+    return true;
+  }, [amount, fromCode, toCode, allOptions, onConvert]);
+
+  useEffect(() => {
+    performConversion();
+  }, [performConversion]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,15 +79,7 @@ export function ConversionForm({ indicators, onConvert }: ConversionFormProps) {
       return;
     }
 
-    const fromIndicator = allOptions.find((i) => i.codigo === fromCode);
-    const toIndicator = allOptions.find((i) => i.codigo === toCode);
-
-    if (!fromIndicator || !toIndicator) {
-      setError('Indicador no encontrado');
-      return;
-    }
-
-    onConvert({ amount: parsedAmount, fromIndicator, toIndicator });
+    performConversion();
   };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
