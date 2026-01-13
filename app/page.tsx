@@ -17,12 +17,12 @@ export default async function Home() {
 
   return (
     <div>
-      <h1 className="mb-6 text-xl font-semibold text-zinc-900 dark:text-zinc-50 sm:text-2xl">
+      <h1 className="mb-6 text-[length:var(--text-title)] font-semibold leading-[var(--leading-title)] text-zinc-900 dark:text-zinc-50">
         Indicadores Económicos
       </h1>
       {error ? (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950">
-          <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+          <p className="text-[length:var(--text-label)] leading-[var(--leading-label)] text-red-700 dark:text-red-400">{error}</p>
         </div>
       ) : (
         <IndicatorsList indicators={indicators} />

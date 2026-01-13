@@ -10,6 +10,35 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Typography Scale */
+  /* Page Title: 24px / 32px */
+  --text-title: 1.5rem;
+  --leading-title: 2rem;
+
+  /* Section Title: 18px / 28px */
+  --text-section: 1.125rem;
+  --leading-section: 1.75rem;
+
+  /* Body: 16px / 24px */
+  --text-body: 1rem;
+  --leading-body: 1.5rem;
+
+  /* Label: 14px / 20px */
+  --text-label: 0.875rem;
+  --leading-label: 1.25rem;
+
+  /* Small: 12px / 16px */
+  --text-small: 0.75rem;
+  --leading-small: 1rem;
+
+  /* Display: 60px / 64px (for special cases like 404) */
+  --text-display: 3.75rem;
+  --leading-display: 1;
+
+  /* Large Value: 24px / 32px (for numeric displays) */
+  --text-value: 1.5rem;
+  --leading-value: 2rem;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,4 +52,8 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }

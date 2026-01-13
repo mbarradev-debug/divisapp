@@ -12,10 +12,10 @@ export function IndicatorSeriesItem({ fecha, valor }: IndicatorSeriesItemProps) 
 
   return (
     <div className="flex items-center justify-between px-4 py-3">
-      <span className="text-sm text-zinc-600 dark:text-zinc-400">
+      <span className="text-[length:var(--text-label)] leading-[var(--leading-label)] text-zinc-600 dark:text-zinc-400">
         {formattedDate}
       </span>
-      <span className="font-medium tabular-nums text-zinc-900 dark:text-zinc-50">
+      <span className="text-[length:var(--text-body)] font-medium leading-[var(--leading-body)] tabular-nums text-zinc-900 dark:text-zinc-50">
         {valor.toLocaleString('es-CL')}
       </span>
     </div>

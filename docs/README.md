@@ -40,6 +40,7 @@ Start here if you want to understand **how the application is built**:
 - [Overview](./architecture/overview.md) - High-level architecture and technology choices
 - [Folder Structure](./architecture/folder-structure.md) - What each folder and file does
 - [Data Flow](./architecture/data-flow.md) - How data moves through the application
+- [Typography](./architecture/typography.md) - Font choice and typography system
 
 ### Features (`/features`)
 

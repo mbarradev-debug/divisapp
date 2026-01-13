@@ -33,13 +33,13 @@ export default function RootLayout({
             <nav className="flex items-center justify-between">
               <Link
                 href="/"
-                className="text-lg font-semibold text-zinc-900 dark:text-zinc-50"
+                className="text-[length:var(--text-section)] font-semibold leading-[var(--leading-section)] text-zinc-900 dark:text-zinc-50"
               >
                 DivisApp
               </Link>
               <Link
                 href="/convert"
-                className="rounded-md px-3 py-1.5 text-sm font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+                className="rounded-md px-3 py-1.5 text-[length:var(--text-label)] font-medium leading-[var(--leading-label)] text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
               >
                 Convertir
               </Link>
