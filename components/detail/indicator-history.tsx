@@ -6,6 +6,7 @@ import { formatValue } from '@/lib/format';
 import { LineChartBase, ChartDataPoint } from '@/components/ui/line-chart-base';
 import { RangeSelector } from './range-selector';
 import { IndicatorSeriesList } from './indicator-series-list';
+import { TrendIndicator } from './trend-indicator';
 
 type RangeOption = 7 | 30 | 90;
 
@@ -39,23 +40,39 @@ export function IndicatorHistory({ serie, unidadMedida }: IndicatorHistoryProps)
   const min = values.length >= 2 ? Math.min(...values) : null;
   const max = values.length >= 2 ? Math.max(...values) : null;
 
+  // Delta: most recent value (first) minus oldest value (last in range)
+  const firstValue = displayedSerie[0]?.valor;
+  const lastValue = displayedSerie[displayedSerie.length - 1]?.valor;
+  const delta =
+    typeof firstValue === 'number' &&
+    typeof lastValue === 'number' &&
+    !Number.isNaN(firstValue) &&
+    !Number.isNaN(lastValue)
+      ? firstValue - lastValue
+      : null;
+
   return (
     <div className="space-y-3">
       <div className="flex justify-end">
         <RangeSelector value={range} onChange={setRange} />
       </div>
-      {min !== null && max !== null && (
-        <div className="flex gap-6 text-[length:var(--text-label)] leading-[var(--leading-label)]">
-          <div>
-            <span className="text-text-muted">Mín </span>
-            <span className="text-text-secondary">{formatValue(min, unidadMedida)}</span>
-          </div>
-          <div>
-            <span className="text-text-muted">Máx </span>
-            <span className="text-text-secondary">{formatValue(max, unidadMedida)}</span>
-          </div>
+      {(min !== null && max !== null) || delta !== null ? (
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-[length:var(--text-label)] leading-[var(--leading-label)]">
+          {delta !== null && <TrendIndicator delta={delta} unit={unidadMedida} />}
+          {min !== null && max !== null && (
+            <>
+              <div>
+                <span className="text-text-muted">Mín </span>
+                <span className="text-text-secondary">{formatValue(min, unidadMedida)}</span>
+              </div>
+              <div>
+                <span className="text-text-muted">Máx </span>
+                <span className="text-text-secondary">{formatValue(max, unidadMedida)}</span>
+              </div>
+            </>
+          )}
         </div>
-      )}
+      ) : null}
       {chartData.length >= 2 && <LineChartBase data={chartData} />}
       <IndicatorSeriesList serie={displayedSerie} unidadMedida={unidadMedida} />
     </div>
