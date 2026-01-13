@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { IndicatorValue } from '@/lib/api/mindicador';
 import { useFavorites } from '@/lib/storage';
 import { IndicatorItem } from './indicator-item';
+import { FavoriteIndicatorItem } from './favorite-indicator-item';
 
 interface HomeIndicatorsProps {
   indicators: IndicatorValue[];
@@ -17,15 +18,25 @@ export function HomeIndicators({ indicators }: HomeIndicatorsProps) {
       return { favoriteIndicators: [], otherIndicators: indicators };
     }
     const favoritesSet = new Set(favorites);
+    const indicatorMap = new Map(indicators.map((ind) => [ind.codigo, ind]));
     const favs: IndicatorValue[] = [];
     const others: IndicatorValue[] = [];
-    for (const indicator of indicators) {
-      if (favoritesSet.has(indicator.codigo)) {
+
+    // Build favorites in the order they appear in the favorites array
+    for (const codigo of favorites) {
+      const indicator = indicatorMap.get(codigo);
+      if (indicator) {
         favs.push(indicator);
-      } else {
+      }
+    }
+
+    // Build others from remaining indicators
+    for (const indicator of indicators) {
+      if (!favoritesSet.has(indicator.codigo)) {
         others.push(indicator);
       }
     }
+
     return { favoriteIndicators: favs, otherIndicators: others };
   }, [indicators, favorites]);
 
@@ -40,8 +51,13 @@ export function HomeIndicators({ indicators }: HomeIndicatorsProps) {
             Favoritos
           </h2>
           <div className="grid gap-3 sm:grid-cols-2">
-            {favoriteIndicators.map((indicator) => (
-              <IndicatorItem key={indicator.codigo} indicator={indicator} />
+            {favoriteIndicators.map((indicator, index) => (
+              <FavoriteIndicatorItem
+                key={indicator.codigo}
+                indicator={indicator}
+                index={index}
+                totalCount={favoriteIndicators.length}
+              />
             ))}
           </div>
         </section>
