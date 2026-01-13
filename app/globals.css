@@ -26,6 +26,10 @@
   --ring: #71717a;
   --ring-offset: #fafafa;
 
+  /* Chart Colors */
+  --chart-line: #2563eb;
+  --chart-grid: #e4e4e7;
+
   /* Semantic: Error */
   --error: #dc2626;
   --error-bg: #fef2f2;
@@ -78,6 +82,10 @@
     --ring: #a1a1aa;
     --ring-offset: #09090b;
 
+    /* Chart Colors */
+    --chart-line: #60a5fa;
+    --chart-grid: #3f3f46;
+
     /* Semantic: Error */
     --error: #f87171;
     --error-bg: #450a0a;
@@ -128,6 +136,9 @@
 
   --color-ring: var(--ring);
   --color-ring-offset: var(--ring-offset);
+
+  --color-chart-line: var(--chart-line);
+  --color-chart-grid: var(--chart-grid);
 
   --color-error: var(--error);
   --color-error-bg: var(--error-bg);

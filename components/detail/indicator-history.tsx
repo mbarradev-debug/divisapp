@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { SerieItem } from '@/lib/api/mindicador';
 import { formatValue } from '@/lib/format';
+import { LineChartBase, ChartDataPoint } from '@/components/ui/line-chart-base';
 import { RangeSelector } from './range-selector';
 import { IndicatorSeriesList } from './indicator-series-list';
 
@@ -16,11 +17,20 @@ interface IndicatorHistoryProps {
 export function IndicatorHistory({ serie, unidadMedida }: IndicatorHistoryProps) {
   const [range, setRange] = useState<RangeOption>(7);
 
+  const displayedSerie = serie.slice(0, range);
+
+  const chartData: ChartDataPoint[] = useMemo(() => {
+    return [...displayedSerie]
+      .reverse()
+      .map((item) => ({
+        x: item.fecha,
+        y: item.valor,
+      }));
+  }, [displayedSerie]);
+
   if (serie.length === 0) {
     return null;
   }
-
-  const displayedSerie = serie.slice(0, range);
 
   const values = displayedSerie
     .map((item) => item.valor)
@@ -34,6 +44,7 @@ export function IndicatorHistory({ serie, unidadMedida }: IndicatorHistoryProps)
       <div className="flex justify-end">
         <RangeSelector value={range} onChange={setRange} />
       </div>
+      {chartData.length >= 2 && <LineChartBase data={chartData} />}
       {min !== null && max !== null && (
         <div className="flex gap-6 text-[length:var(--text-label)] leading-[var(--leading-label)]">
           <div>
