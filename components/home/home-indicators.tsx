@@ -42,10 +42,10 @@ export function HomeIndicators({ indicators }: HomeIndicatorsProps) {
 
   return (
     <>
-      <section aria-labelledby="favorites-heading" className="mb-8">
+      <section aria-labelledby="favorites-heading" className="mb-6 pb-6 border-b border-border-subtle">
         <h2
           id="favorites-heading"
-          className="mb-3 text-[length:var(--text-label)] font-medium leading-[var(--leading-label)] text-text-muted"
+          className="mb-4 text-[length:var(--text-body)] font-semibold leading-[var(--leading-body)] text-text-muted"
         >
           Favoritos
         </h2>
@@ -86,17 +86,19 @@ export function HomeIndicators({ indicators }: HomeIndicatorsProps) {
           </div>
         )}
       </section>
-      {otherIndicators.length === 0 ? (
-        <p className="py-8 text-center text-[length:var(--text-label)] leading-[var(--leading-label)] text-text-muted">
-          No hay indicadores disponibles.
-        </p>
-      ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
-          {otherIndicators.map((indicator) => (
-            <IndicatorItem key={indicator.codigo} indicator={indicator} />
-          ))}
-        </div>
-      )}
+      <section aria-label="Todos los indicadores" className="pt-2">
+        {otherIndicators.length === 0 ? (
+          <p className="py-8 text-center text-[length:var(--text-label)] leading-[var(--leading-label)] text-text-muted">
+            No hay indicadores disponibles.
+          </p>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {otherIndicators.map((indicator) => (
+              <IndicatorItem key={indicator.codigo} indicator={indicator} />
+            ))}
+          </div>
+        )}
+      </section>
     </>
   );
 }
