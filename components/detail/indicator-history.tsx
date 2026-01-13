@@ -44,7 +44,6 @@ export function IndicatorHistory({ serie, unidadMedida }: IndicatorHistoryProps)
       <div className="flex justify-end">
         <RangeSelector value={range} onChange={setRange} />
       </div>
-      {chartData.length >= 2 && <LineChartBase data={chartData} />}
       {min !== null && max !== null && (
         <div className="flex gap-6 text-[length:var(--text-label)] leading-[var(--leading-label)]">
           <div>
@@ -57,6 +56,7 @@ export function IndicatorHistory({ serie, unidadMedida }: IndicatorHistoryProps)
           </div>
         </div>
       )}
+      {chartData.length >= 2 && <LineChartBase data={chartData} />}
       <IndicatorSeriesList serie={displayedSerie} unidadMedida={unidadMedida} />
     </div>
   );
