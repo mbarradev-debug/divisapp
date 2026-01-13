@@ -79,3 +79,14 @@ export function formatAmount(value: number): string {
 export function isPercentageUnit(unit: string): boolean {
   return unit.toLowerCase().includes('porcentaje');
 }
+
+export function formatVariation(value: number, unit: string): string {
+  if (value === 0) {
+    return formatValue(0, unit);
+  }
+
+  const formatted = formatValue(Math.abs(value), unit);
+  const sign = value > 0 ? '+\u00A0' : '−\u00A0';
+
+  return `${sign}${formatted}`;
+}

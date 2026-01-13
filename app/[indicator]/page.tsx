@@ -59,6 +59,8 @@ export default async function IndicatorPage({ params }: IndicatorPageProps) {
       <IndicatorHeader
         nombre={data.nombre}
         unidadMedida={data.unidad_medida}
+        valorActual={data.serie[0]?.valor}
+        valorAnterior={data.serie[1]?.valor}
       />
       <IndicatorSeriesList serie={data.serie.slice(0, 10)} unidadMedida={data.unidad_medida} />
     </div>
