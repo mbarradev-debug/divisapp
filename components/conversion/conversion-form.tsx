@@ -80,6 +80,12 @@ export function ConversionForm({ indicators, onConvert }: ConversionFormProps) {
     setError(null);
   };
 
+  const handleSwap = () => {
+    setFromCode(toCode);
+    setToCode(fromCode);
+    setError(null);
+  };
+
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
       <Input
@@ -102,6 +108,31 @@ export function ConversionForm({ indicators, onConvert }: ConversionFormProps) {
         options={selectOptions}
         placeholder="Selecciona un indicador"
       />
+
+      <div className="flex justify-center">
+        <button
+          type="button"
+          onClick={handleSwap}
+          aria-label="Intercambiar indicadores"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-border-strong bg-bg-subtle text-text-secondary hover:bg-bg-muted hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset transition-colors"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M7 16V4M7 4L3 8M7 4L11 8" />
+            <path d="M17 8V20M17 20L21 16M17 20L13 16" />
+          </svg>
+        </button>
+      </div>
 
       <Select
         id="to"
