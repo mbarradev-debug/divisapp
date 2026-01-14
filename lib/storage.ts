@@ -20,8 +20,8 @@ export interface ConversionState {
 
 const defaultState: ConversionState = {
   amount: '',
-  fromCode: '',
-  toCode: '',
+  fromCode: 'uf',
+  toCode: 'clp',
   result: null,
 };
 

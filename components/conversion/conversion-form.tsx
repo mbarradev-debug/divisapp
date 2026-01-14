@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { IndicatorValue } from '@/lib/api/mindicador';
 import { Button, Input, Select } from '@/components/ui';
 import { usePersistedConversion } from '@/lib/storage';
@@ -23,14 +24,35 @@ interface ConversionFormProps {
 }
 
 export function ConversionForm({ indicators, onConvert }: ConversionFormProps) {
+  const searchParams = useSearchParams();
   const { amount, fromCode, toCode, setAmount, setFromCode, setToCode } =
     usePersistedConversion();
   const [error, setError] = useState<string | null>(null);
+  const hasAppliedQueryParam = useRef(false);
 
   const allOptions = useMemo(
     () => [CLP_INDICATOR, ...indicators],
     [indicators]
   );
+
+  // Apply contextual entry from URL query param (once, after indicators load)
+  useEffect(() => {
+    if (hasAppliedQueryParam.current || indicators.length === 0) return;
+
+    const fromParam = searchParams.get('from');
+    if (!fromParam) {
+      hasAppliedQueryParam.current = true;
+      return;
+    }
+
+    const isValidIndicator = allOptions.some((i) => i.codigo === fromParam);
+    if (isValidIndicator) {
+      setFromCode(fromParam);
+      // Set toCode to CLP unless fromParam is CLP, then use UF
+      setToCode(fromParam === 'clp' ? 'uf' : 'clp');
+    }
+    hasAppliedQueryParam.current = true;
+  }, [searchParams, indicators.length, allOptions, setFromCode, setToCode]);
 
   const selectOptions = useMemo(
     () =>

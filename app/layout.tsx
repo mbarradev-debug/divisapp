@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
+import { ConvertLink } from "@/components/navigation/convert-link";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -37,12 +38,7 @@ export default function RootLayout({
               >
                 DivisApp
               </Link>
-              <Link
-                href="/convert"
-                className="rounded-md px-3 py-1.5 text-[length:var(--text-label)] font-medium leading-[var(--leading-label)] text-text-secondary hover:bg-bg-muted hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                Convertir
-              </Link>
+              <ConvertLink />
             </nav>
           </header>
           <main className="px-4 py-6 sm:px-6">{children}</main>
