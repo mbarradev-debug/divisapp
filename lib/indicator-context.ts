@@ -21,139 +21,157 @@ export interface IndicatorContext {
 export const INDICATOR_CONTEXT: Record<IndicatorCode, IndicatorContext> = {
   uf: {
     code: 'uf',
-    description: 'Unidad de Fomento, a daily-adjusted unit of account indexed to inflation.',
+    description:
+      'La Unidad de Fomento es una unidad de cuenta que se ajusta diariamente según la inflación.',
     represents:
-      'A standardized measure used in Chile to maintain purchasing power over time. It adjusts daily based on the previous month inflation rate.',
+      'Es una medida estandarizada usada en Chile para mantener el poder adquisitivo en el tiempo. Se actualiza diariamente en base a la inflación del mes anterior.',
     implications: {
       upward:
-        'Reflects accumulated inflation. Loans, contracts, and savings denominated in UF increase in nominal peso terms.',
+        'Refleja la inflación acumulada. Los créditos, contratos y ahorros en UF aumentan en términos de pesos.',
       downward:
-        'Indicates deflation in the economy. Obligations in UF would decrease in nominal peso terms.',
+        'Indica deflación en la economía. Las obligaciones en UF disminuirían en términos de pesos.',
     },
   },
   ivp: {
     code: 'ivp',
-    description: 'Índice de Valor Promedio, an average value index for banking operations.',
+    description:
+      'El Índice de Valor Promedio es un índice de referencia para operaciones bancarias.',
     represents:
-      'A reference index used in certain financial and banking calculations in Chile, reflecting average values in specific operations.',
+      'Es un índice de referencia utilizado en ciertos cálculos financieros y bancarios en Chile, reflejando valores promedio en operaciones específicas.',
     implications: {
-      upward: 'May indicate higher average values in the underlying banking operations.',
-      downward: 'May indicate lower average values in the underlying banking operations.',
+      upward:
+        'Puede indicar valores promedio más altos en las operaciones bancarias subyacentes.',
+      downward:
+        'Puede indicar valores promedio más bajos en las operaciones bancarias subyacentes.',
     },
   },
   dolar: {
     code: 'dolar',
-    description: 'Official observed US dollar exchange rate in Chilean pesos.',
+    description:
+      'El tipo de cambio oficial del dólar estadounidense expresado en pesos chilenos.',
     represents:
-      'The average interbank exchange rate for the US dollar, published daily by the Central Bank of Chile.',
+      'Es el tipo de cambio interbancario promedio del dólar estadounidense, publicado diariamente por el Banco Central de Chile.',
     implications: {
       upward:
-        'The Chilean peso weakens relative to the US dollar. Imports become more expensive; exports become more competitive.',
+        'El peso chileno se debilita frente al dólar. Las importaciones se encarecen; las exportaciones se vuelven más competitivas.',
       downward:
-        'The Chilean peso strengthens relative to the US dollar. Imports become cheaper; exports become less competitive.',
+        'El peso chileno se fortalece frente al dólar. Las importaciones se abaratan; las exportaciones se vuelven menos competitivas.',
     },
   },
   dolar_intercambio: {
     code: 'dolar_intercambio',
-    description: 'Interbank US dollar exchange rate for foreign trade operations.',
+    description:
+      'El tipo de cambio interbancario del dólar para operaciones de comercio exterior.',
     represents:
-      'A reference exchange rate used specifically for international trade settlements and customs valuation.',
+      'Es un tipo de cambio de referencia utilizado específicamente para liquidaciones de comercio internacional y valoración aduanera.',
     implications: {
-      upward: 'Higher costs for importers in peso terms. Export revenues increase when converted to pesos.',
-      downward: 'Lower costs for importers in peso terms. Export revenues decrease when converted to pesos.',
+      upward:
+        'Mayores costos para importadores en pesos. Los ingresos por exportaciones aumentan al convertirse a pesos.',
+      downward:
+        'Menores costos para importadores en pesos. Los ingresos por exportaciones disminuyen al convertirse a pesos.',
     },
   },
   euro: {
     code: 'euro',
-    description: 'Official observed euro exchange rate in Chilean pesos.',
+    description:
+      'El tipo de cambio oficial del euro expresado en pesos chilenos.',
     represents:
-      'The average interbank exchange rate for the euro, published daily by the Central Bank of Chile.',
+      'Es el tipo de cambio interbancario promedio del euro, publicado diariamente por el Banco Central de Chile.',
     implications: {
       upward:
-        'The Chilean peso weakens relative to the euro. European imports become more expensive; exports to Europe become more competitive.',
+        'El peso chileno se debilita frente al euro. Las importaciones europeas se encarecen; las exportaciones a Europa se vuelven más competitivas.',
       downward:
-        'The Chilean peso strengthens relative to the euro. European imports become cheaper; exports to Europe become less competitive.',
+        'El peso chileno se fortalece frente al euro. Las importaciones europeas se abaratan; las exportaciones a Europa se vuelven menos competitivas.',
     },
   },
   ipc: {
     code: 'ipc',
-    description: 'Índice de Precios al Consumidor, the consumer price index measuring inflation.',
+    description:
+      'El Índice de Precios al Consumidor mide la variación de precios de bienes y servicios.',
     represents:
-      'A monthly index that measures the average change in prices paid by consumers for a basket of goods and services.',
+      'Es un índice mensual que mide el cambio promedio en los precios pagados por los consumidores por una canasta de bienes y servicios.',
     implications: {
-      upward: 'Indicates rising consumer prices (inflation). Purchasing power of the peso decreases.',
-      downward: 'Indicates falling consumer prices (deflation). Purchasing power of the peso increases.',
+      upward:
+        'Indica un aumento en los precios al consumidor (inflación). El poder adquisitivo del peso disminuye.',
+      downward:
+        'Indica una disminución en los precios al consumidor (deflación). El poder adquisitivo del peso aumenta.',
     },
   },
   utm: {
     code: 'utm',
-    description: 'Unidad Tributaria Mensual, a monthly tax unit adjusted for inflation.',
+    description:
+      'La Unidad Tributaria Mensual es una unidad de referencia que se ajusta mensualmente según la inflación.',
     represents:
-      'A reference unit used for tax calculations, fines, and legal thresholds in Chile. It updates monthly based on IPC.',
+      'Es una unidad de referencia utilizada para cálculos tributarios, multas y límites legales en Chile. Se actualiza mensualmente según el IPC.',
     implications: {
       upward:
-        'Tax brackets, fines, and thresholds expressed in UTM increase in nominal peso terms.',
+        'Los tramos impositivos, multas y límites expresados en UTM aumentan en términos de pesos.',
       downward:
-        'Tax brackets, fines, and thresholds expressed in UTM decrease in nominal peso terms.',
+        'Los tramos impositivos, multas y límites expresados en UTM disminuyen en términos de pesos.',
     },
   },
   imacec: {
     code: 'imacec',
     description:
-      'Índice Mensual de Actividad Económica, a monthly indicator of economic activity.',
+      'El Índice Mensual de Actividad Económica mide la evolución de la actividad económica a corto plazo.',
     represents:
-      'A proxy for GDP that measures the short-term evolution of economic activity in Chile on a monthly basis.',
+      'Es un indicador proxy del PIB que mide la evolución mensual de la actividad económica en Chile.',
     implications: {
-      upward: 'Indicates expansion in economic activity. Production and services are growing.',
-      downward: 'Indicates contraction in economic activity. Production and services are declining.',
+      upward:
+        'Indica expansión de la actividad económica. La producción y los servicios están creciendo.',
+      downward:
+        'Indica contracción de la actividad económica. La producción y los servicios están disminuyendo.',
     },
   },
   tpm: {
     code: 'tpm',
-    description: 'Tasa de Política Monetaria, the monetary policy interest rate.',
+    description:
+      'La Tasa de Política Monetaria es la tasa de interés de referencia del Banco Central.',
     represents:
-      'The benchmark interest rate set by the Central Bank of Chile to influence inflation and economic activity.',
+      'Es la tasa de interés de referencia establecida por el Banco Central de Chile para influir en la inflación y la actividad económica.',
     implications: {
       upward:
-        'Borrowing becomes more expensive. Intended to reduce spending and control inflation.',
+        'El crédito se encarece. Busca reducir el gasto y controlar la inflación.',
       downward:
-        'Borrowing becomes cheaper. Intended to stimulate spending and economic activity.',
+        'El crédito se abarata. Busca estimular el gasto y la actividad económica.',
     },
   },
   libra_cobre: {
     code: 'libra_cobre',
-    description: 'Price of copper per pound in US cents.',
+    description:
+      'El precio del cobre por libra expresado en centavos de dólar estadounidense.',
     represents:
-      'The international market price for copper, the main export commodity of Chile and a key driver of its economy.',
+      'Es el precio de mercado internacional del cobre, principal producto de exportación de Chile y factor clave de su economía.',
     implications: {
       upward:
-        'Higher export revenues for Chile. Positive effect on fiscal income and the trade balance.',
+        'Mayores ingresos por exportaciones para Chile. Efecto positivo en los ingresos fiscales y la balanza comercial.',
       downward:
-        'Lower export revenues for Chile. Negative effect on fiscal income and the trade balance.',
+        'Menores ingresos por exportaciones para Chile. Efecto negativo en los ingresos fiscales y la balanza comercial.',
     },
   },
   tasa_desempleo: {
     code: 'tasa_desempleo',
-    description: 'Unemployment rate as a percentage of the labor force.',
+    description:
+      'La tasa de desempleo expresada como porcentaje de la fuerza laboral.',
     represents:
-      'The proportion of the labor force that is without work but actively seeking employment.',
+      'Es la proporción de la fuerza laboral que no tiene trabajo pero está buscando empleo activamente.',
     implications: {
       upward:
-        'More people are without employment. May indicate economic slowdown or labor market challenges.',
+        'Más personas sin empleo. Puede indicar desaceleración económica o dificultades en el mercado laboral.',
       downward:
-        'Fewer people are without employment. May indicate economic growth or improved labor conditions.',
+        'Menos personas sin empleo. Puede indicar crecimiento económico o mejoras en las condiciones laborales.',
     },
   },
   bitcoin: {
     code: 'bitcoin',
-    description: 'Bitcoin price in Chilean pesos.',
+    description: 'El precio de Bitcoin expresado en pesos chilenos.',
     represents:
-      'The market value of one Bitcoin expressed in Chilean pesos, reflecting both its USD price and the peso exchange rate.',
+      'Es el valor de mercado de un Bitcoin expresado en pesos chilenos, reflejando tanto su precio en dólares como el tipo de cambio del peso.',
     implications: {
       upward:
-        'Bitcoin has appreciated relative to the Chilean peso. May reflect global crypto market trends or peso depreciation.',
+        'Bitcoin se ha apreciado frente al peso chileno. Puede reflejar tendencias del mercado cripto global o depreciación del peso.',
       downward:
-        'Bitcoin has depreciated relative to the Chilean peso. May reflect global crypto market trends or peso appreciation.',
+        'Bitcoin se ha depreciado frente al peso chileno. Puede reflejar tendencias del mercado cripto global o apreciación del peso.',
     },
   },
 };
