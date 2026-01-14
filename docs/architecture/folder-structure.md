@@ -12,7 +12,7 @@ divisapp/
 │   ├── convert/                  # Conversion feature
 │   │   ├── page.tsx
 │   │   └── conversion-client.tsx
-│   ├── globals.css               # Global styles (Tailwind CSS)
+│   ├── globals.css               # Global styles and CSS variables
 │   ├── layout.tsx                # Root layout (header, navigation)
 │   ├── not-found.tsx             # 404 error page
 │   ├── page.tsx                  # Home page
@@ -24,24 +24,39 @@ divisapp/
 │   │   └── conversion-result.tsx
 │   ├── detail/                   # Indicator detail components
 │   │   ├── indicator-header.tsx
+│   │   ├── indicator-history.tsx
 │   │   ├── indicator-series-item.tsx
-│   │   └── indicator-series-list.tsx
-│   └── home/                     # Home page components
-│       ├── indicator-item.tsx
-│       └── indicators-list.tsx
+│   │   ├── indicator-series-list.tsx
+│   │   ├── range-selector.tsx
+│   │   └── trend-indicator.tsx
+│   ├── home/                     # Home page components
+│   │   ├── favorite-indicator-item.tsx
+│   │   ├── home-indicators.tsx
+│   │   ├── indicator-item.tsx
+│   │   └── indicators-list.tsx
+│   ├── navigation/               # Navigation components
+│   │   └── convert-link.tsx
+│   └── ui/                       # Reusable UI primitives
+│       ├── index.ts              # Barrel export
+│       ├── button.tsx
+│       ├── card.tsx
+│       ├── favorite-button.tsx
+│       ├── input.tsx
+│       ├── line-chart-base.tsx
+│       ├── reorder-controls.tsx
+│       ├── select.tsx
+│       └── tooltip.tsx
 │
 ├── lib/                          # Shared logic and utilities
-│   └── api/                      # API clients
-│       ├── mindicador.ts         # mindicador.cl API client
-│       └── __tests__/            # API tests
-│           └── mindicador.test.ts
+│   ├── api/                      # API clients
+│   │   ├── mindicador.ts         # mindicador.cl API client
+│   │   └── __tests__/            # API tests
+│   │       └── mindicador.test.ts
+│   ├── format.ts                 # Number and date formatting
+│   └── storage.ts                # localStorage hooks
 │
 ├── public/                       # Static files (served as-is)
-│   ├── file.svg
-│   ├── globe.svg
-│   ├── next.svg
-│   ├── vercel.svg
-│   └── window.svg
+│   └── ...
 │
 ├── docs/                         # Project documentation
 │   └── ...
@@ -74,7 +89,7 @@ This is where Next.js App Router pages live. The folder structure directly maps 
 - **`page.tsx`**: Defines a route. Every folder with a `page.tsx` becomes a URL.
 - **`layout.tsx`**: Wraps pages. The root layout wraps all pages.
 - **`not-found.tsx`**: Shown when a page doesn't exist.
-- **`globals.css`**: Imported by the layout, applies to all pages.
+- **`globals.css`**: Imported by the layout, applies to all pages. Contains CSS variables for theming.
 
 ### Dynamic Routes
 
@@ -106,17 +121,41 @@ This folder contains reusable React components, organized by feature.
 components/
 ├── conversion/     # Components used by /convert
 ├── detail/         # Components used by /[indicator]
-└── home/           # Components used by /
+├── home/           # Components used by /
+├── navigation/     # Navigation components
+└── ui/             # Reusable UI primitives
 ```
 
 This organization makes it easy to find components: look in the folder matching the feature you're working on.
 
-### Naming Convention
+### The `ui/` Folder
+
+The `ui/` folder contains reusable, generic components that are not tied to any specific feature:
+
+| Component | Purpose |
+|-----------|---------|
+| `button.tsx` | Styled button with variants (primary, secondary) |
+| `card.tsx` | Container with border and optional header |
+| `input.tsx` | Text/number input field |
+| `select.tsx` | Dropdown selector |
+| `tooltip.tsx` | Hover/focus tooltips |
+| `favorite-button.tsx` | Heart icon toggle |
+| `line-chart-base.tsx` | Recharts line chart wrapper |
+| `reorder-controls.tsx` | Up/down arrow buttons |
+| `index.ts` | Barrel file for easy imports |
+
+Import from `ui/` using the barrel export:
+
+```tsx
+import { Button, Card, Input } from '@/components/ui';
+```
+
+### Component Naming Convention
 
 Components use kebab-case filenames with descriptive names:
 
 - `indicator-item.tsx` - A single indicator card
-- `indicator-series-list.tsx` - A list of historical values
+- `indicator-history.tsx` - Historical data with chart
 - `conversion-form.tsx` - The conversion input form
 
 Each file exports a single component with a PascalCase name:
@@ -145,15 +184,17 @@ This folder contains shared logic that isn't React components.
 
 ```
 lib/
-└── api/
-    ├── mindicador.ts          # API client functions and types
-    └── __tests__/
-        └── mindicador.test.ts  # Tests for the API client
+├── api/
+│   ├── mindicador.ts          # API client functions and types
+│   └── __tests__/
+│       └── mindicador.test.ts  # Tests for the API client
+├── format.ts                   # Locale-aware formatting functions
+└── storage.ts                  # localStorage hooks
 ```
 
-### The API Client
+### The API Client (`api/mindicador.ts`)
 
-`mindicador.ts` contains:
+Contains:
 
 - **TypeScript interfaces**: Define the shape of API responses
 - **API functions**: `getAllIndicators()` and `getIndicatorByCode()`
@@ -166,19 +207,33 @@ This file is imported by page components to fetch data:
 import { getAllIndicators } from '@/lib/api/mindicador';
 ```
 
-### Future Expansion
+### Format Utilities (`format.ts`)
 
-As the project grows, you might add:
+Contains locale-aware formatting functions:
 
+```tsx
+import { formatValue, formatVariation, formatDate } from '@/lib/format';
+
+formatValue(36123.45, 'Pesos');  // "$36.123,45"
+formatVariation(34.25);          // "+$34,25"
+formatDate('2025-01-14');        // "14 ene 2025"
 ```
-lib/
-├── api/
-│   └── mindicador.ts
-├── utils/              # Utility functions
-│   └── formatting.ts   # Date/number formatting
-└── constants/          # Application constants
-    └── indicators.ts   # List of known indicators
+
+### Storage Hooks (`storage.ts`)
+
+Contains localStorage-backed React hooks:
+
+```tsx
+import { useFavorites, usePersistedConversion } from '@/lib/storage';
+
+// Favorites management
+const { favorites, isFavorite, toggleFavorite, moveFavorite } = useFavorites();
+
+// Conversion state persistence
+const { conversion, setConversion } = usePersistedConversion();
 ```
+
+These hooks use `useSyncExternalStore` for SSR-safe localStorage access.
 
 ## The `public/` Folder
 
@@ -278,6 +333,14 @@ components/
     └── settings-toggle.tsx
 ```
 
+### Adding UI Primitives
+
+If you're creating a reusable component that's not feature-specific:
+
+1. Add it to `components/ui/`
+2. Export it from `components/ui/index.ts`
+3. Import from `@/components/ui`
+
 ### Adding a New API Client
 
 1. Create a new file in `lib/api/`
@@ -287,7 +350,7 @@ components/
 
 ### Adding Utilities
 
-1. Create a file in `lib/` (or `lib/utils/`)
+1. Create a file in `lib/` (or add to existing utility files)
 2. Export pure functions (no React)
 3. Import where needed
 
@@ -341,3 +404,24 @@ import { formatError } from './helpers';  // Circular!
 ```
 
 Keep dependencies flowing in one direction.
+
+### Putting State Logic in UI Components
+
+UI primitives in `components/ui/` should be stateless when possible. State management belongs in feature components or hooks:
+
+**Don't:**
+```tsx
+// components/ui/favorite-button.tsx
+export function FavoriteButton() {
+  const [isFavorite, setIsFavorite] = useState(false);  // Avoid state here
+  // ...
+}
+```
+
+**Do:**
+```tsx
+// components/ui/favorite-button.tsx
+export function FavoriteButton({ isFavorite, onToggle }) {
+  // Receive state via props
+}
+```

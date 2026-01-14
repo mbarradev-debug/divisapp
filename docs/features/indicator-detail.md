@@ -50,13 +50,7 @@ export default async function IndicatorPage({ params }: IndicatorPageProps) {
 import { notFound } from 'next/navigation';
 import { getIndicatorByCode, MindicadorApiError } from '@/lib/api/mindicador';
 import { IndicatorHeader } from '@/components/detail/indicator-header';
-import { IndicatorSeriesList } from '@/components/detail/indicator-series-list';
-
-interface IndicatorPageProps {
-  params: Promise<{
-    indicator: string;
-  }>;
-}
+import { IndicatorHistory } from '@/components/detail/indicator-history';
 
 export default async function IndicatorPage({ params }: IndicatorPageProps) {
   const { indicator } = await params;
@@ -65,14 +59,15 @@ export default async function IndicatorPage({ params }: IndicatorPageProps) {
     const data = await getIndicatorByCode(indicator);
 
     return (
-      <main className="container mx-auto px-4 py-8">
-        <BackButton />
+      <main>
         <IndicatorHeader
           nombre={data.nombre}
           unidadMedida={data.unidad_medida}
+          serie={data.serie}
         />
-        <IndicatorSeriesList
-          serie={data.serie.slice(0, 10)}
+        <IndicatorHistory
+          serie={data.serie}
+          unidadMedida={data.unidad_medida}
         />
       </main>
     );
@@ -90,7 +85,7 @@ export default async function IndicatorPage({ params }: IndicatorPageProps) {
 1. **Extract parameter**: Get the indicator code from the URL
 2. **Fetch data**: Call `getIndicatorByCode(indicator)`
 3. **Handle 404**: If indicator doesn't exist, show 404 page
-4. **Render components**: Display header and historical series
+4. **Render components**: Display header, chart, and historical series
 
 ## How Historical Data is Fetched
 
@@ -135,106 +130,228 @@ interface SerieItem {
 }
 ```
 
-The `serie` array contains up to 30 historical values (most recent first).
+The `serie` array contains up to 30+ historical values (most recent first).
 
 ## Page Components
 
+### Component Hierarchy
+
+```
+IndicatorPage (Server)
+  └─ IndicatorHeader (Server/Client)
+      └─ TrendIndicator (displays current vs yesterday change)
+  └─ IndicatorHistory (Client)
+      ├─ RangeSelector (7/30/90 day buttons)
+      ├─ LineChartBase (Recharts wrapper)
+      ├─ Analytics section (min, max, delta with tooltips)
+      └─ IndicatorSeriesList (table of recent values)
+          └─ IndicatorSeriesItem (single row)
+```
+
 ### IndicatorHeader
 
-Displays the indicator name and unit:
+Displays the indicator name, unit, current value, and day-over-day change:
 
 ```tsx
 // components/detail/indicator-header.tsx
-interface IndicatorHeaderProps {
-  nombre: string;
-  unidadMedida: string;
-}
+export function IndicatorHeader({ nombre, unidadMedida, serie }) {
+  const currentValue = serie[0]?.valor;
+  const previousValue = serie[1]?.valor;
+  const change = currentValue - previousValue;
 
-export function IndicatorHeader({ nombre, unidadMedida }: IndicatorHeaderProps) {
   return (
-    <header className="mb-6">
-      <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-        {nombre}
-      </h1>
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-        Unidad: {unidadMedida}
+    <header>
+      <h1>{nombre}</h1>
+      <p>Unidad: {unidadMedida}</p>
+      <p className="text-2xl font-bold">
+        {formatValue(currentValue, unidadMedida)}
       </p>
+      <TrendIndicator delta={change} unidadMedida={unidadMedida} />
     </header>
   );
 }
 ```
 
-### IndicatorSeriesList
+### TrendIndicator
 
-Renders the list of historical values:
+Shows an up or down arrow with the change value:
 
 ```tsx
-// components/detail/indicator-series-list.tsx
-import { SerieItem } from '@/lib/api/mindicador';
-import { IndicatorSeriesItem } from './indicator-series-item';
+// components/detail/trend-indicator.tsx
+export function TrendIndicator({ delta, unidadMedida }) {
+  const isPositive = delta > 0;
+  const isNeutral = delta === 0;
 
-interface IndicatorSeriesListProps {
-  serie: SerieItem[];
-}
-
-export function IndicatorSeriesList({ serie }: IndicatorSeriesListProps) {
   return (
-    <div className="space-y-2">
-      <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-        Últimos valores
-      </h2>
-      <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
-        {serie.map((item, index) => (
-          <IndicatorSeriesItem key={index} item={item} />
-        ))}
-      </ul>
+    <div className={isPositive ? 'text-success' : 'text-error'}>
+      {isPositive ? '↑ Subió' : '↓ Bajó'}
+      {formatVariation(delta, unidadMedida)} vs ayer
     </div>
   );
 }
 ```
 
-### IndicatorSeriesItem
+### IndicatorHistory (Client Component)
 
-Displays a single historical value:
+The main interactive component that manages range selection and displays the chart:
 
 ```tsx
-// components/detail/indicator-series-item.tsx
-import { SerieItem } from '@/lib/api/mindicador';
+// components/detail/indicator-history.tsx
+'use client';
 
-interface IndicatorSeriesItemProps {
-  item: SerieItem;
-}
+export function IndicatorHistory({ serie, unidadMedida }) {
+  const [range, setRange] = useState(7);  // Default to 7 days
 
-export function IndicatorSeriesItem({ item }: IndicatorSeriesItemProps) {
-  const formattedDate = new Date(item.fecha).toLocaleDateString('es-CL', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric'
-  });
+  // Memoized calculations for performance
+  const displayedSerie = useMemo(() =>
+    serie.slice(0, range),
+    [serie, range]
+  );
 
-  const formattedValue = item.valor.toLocaleString('es-CL', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
+  const chartData = useMemo(() =>
+    [...displayedSerie].reverse().map(item => ({
+      x: item.fecha,
+      y: item.valor
+    })),
+    [displayedSerie]
+  );
+
+  const { min, max } = useMemo(() => {
+    const values = displayedSerie.map(i => i.valor);
+    return {
+      min: Math.min(...values),
+      max: Math.max(...values)
+    };
+  }, [displayedSerie]);
+
+  const delta = useMemo(() => {
+    if (displayedSerie.length < 2) return 0;
+    return displayedSerie[0].valor - displayedSerie[displayedSerie.length - 1].valor;
+  }, [displayedSerie]);
 
   return (
-    <li className="py-3 flex justify-between items-center">
-      <span className="text-sm text-zinc-600 dark:text-zinc-400">
-        {formattedDate}
-      </span>
-      <span className="font-medium text-zinc-900 dark:text-zinc-50 tabular-nums">
-        {formattedValue}
-      </span>
-    </li>
+    <div>
+      <RangeSelector
+        currentRange={range}
+        onRangeChange={setRange}
+      />
+
+      <LineChartBase
+        data={chartData}
+        xKey="x"
+        yKey="y"
+        unit={unidadMedida}
+      />
+
+      <div className="analytics">
+        <Tooltip content="Valor más bajo en el período">
+          <span>Mín: {formatValue(min, unidadMedida)}</span>
+        </Tooltip>
+        <Tooltip content="Valor más alto en el período">
+          <span>Máx: {formatValue(max, unidadMedida)}</span>
+        </Tooltip>
+        <Tooltip content="Cambio desde el inicio del período">
+          <span>Delta: {formatVariation(delta, unidadMedida)}</span>
+        </Tooltip>
+      </div>
+
+      <IndicatorSeriesList serie={displayedSerie} />
+    </div>
   );
 }
 ```
 
-**Formatting details:**
+### RangeSelector
 
-- Dates appear as "15 ene 2024" (Spanish short month)
-- Values use Chilean locale (comma as decimal separator)
-- `tabular-nums` ensures aligned numbers
+Buttons to switch between time ranges:
+
+```tsx
+// components/detail/range-selector.tsx
+'use client';
+
+const RANGES = [
+  { value: 7, label: '7 días' },
+  { value: 30, label: '30 días' },
+  { value: 90, label: '90 días' }
+];
+
+export function RangeSelector({ currentRange, onRangeChange }) {
+  return (
+    <div className="flex gap-2">
+      {RANGES.map(({ value, label }) => (
+        <button
+          key={value}
+          onClick={() => onRangeChange(value)}
+          className={currentRange === value ? 'active' : ''}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+```
+
+### LineChartBase
+
+A wrapper around Recharts for consistent chart styling:
+
+```tsx
+// components/ui/line-chart-base.tsx
+'use client';
+
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+
+export function LineChartBase({ data, xKey, yKey, unit }) {
+  return (
+    <ResponsiveContainer width="100%" height={200}>
+      <LineChart data={data}>
+        <XAxis dataKey={xKey} />
+        <YAxis />
+        <Tooltip formatter={(value) => formatValue(value, unit)} />
+        <Line
+          type="monotone"
+          dataKey={yKey}
+          stroke="var(--color-primary)"
+          strokeWidth={2}
+          dot={false}
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+}
+```
+
+## How Analytics Are Derived
+
+All analytics values (min, max, delta) are computed from the displayed series and memoized:
+
+### Why Memoization?
+
+```tsx
+// Without memoization: recalculates on every render
+const min = Math.min(...displayedSerie.map(i => i.valor));
+
+// With memoization: only recalculates when displayedSerie changes
+const min = useMemo(() =>
+  Math.min(...displayedSerie.map(i => i.valor)),
+  [displayedSerie]
+);
+```
+
+Memoization prevents unnecessary recalculations when:
+- The user hovers over the chart
+- A tooltip appears
+- Any other state changes that cause re-renders
+
+### Calculation Logic
+
+| Metric | Calculation |
+|--------|-------------|
+| **Min** | Smallest value in the selected range |
+| **Max** | Largest value in the selected range |
+| **Delta** | First value minus last value (change over period) |
+| **Chart data** | Reversed series (oldest first) mapped to x/y coordinates |
 
 ## Visual Layout
 
@@ -248,15 +365,31 @@ export function IndicatorSeriesItem({ item }: IndicatorSeriesItemProps) {
 │  Dólar observado                                        │
 │  Unidad: Pesos                                          │
 │                                                         │
+│  $895,23                                                │
+│  ↑ Subió $1,78 vs ayer                                  │
+│                                                         │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │ [7 días]  [30 días]  [90 días]                  │   │
+│  └─────────────────────────────────────────────────┘   │
+│                                                         │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │             📈 Chart                             │   │
+│  │                                                  │   │
+│  │    ·····                                        │   │
+│  │   ·     ···                                     │   │
+│  │  ·         ····                                 │   │
+│  │ ·                                               │   │
+│  └─────────────────────────────────────────────────┘   │
+│                                                         │
+│  Mín: $891,00 ℹ️  Máx: $897,45 ℹ️  Delta: +$4,23 ℹ️    │
+│                                                         │
 │  Últimos valores                                        │
 │  ┌─────────────────────────────────────────────────┐   │
-│  │ 15 ene 2024                           895,23    │   │
+│  │ 15 ene 2025                           895,23    │   │
 │  ├─────────────────────────────────────────────────┤   │
-│  │ 14 ene 2024                           893,45    │   │
+│  │ 14 ene 2025                           893,45    │   │
 │  ├─────────────────────────────────────────────────┤   │
-│  │ 13 ene 2024                           891,00    │   │
-│  ├─────────────────────────────────────────────────┤   │
-│  │ ...                                   ...       │   │
+│  │ 13 ene 2025                           891,00    │   │
 │  └─────────────────────────────────────────────────┘   │
 │                                                         │
 └─────────────────────────────────────────────────────────┘
@@ -272,32 +405,6 @@ If a user visits `/invalid-indicator-code`:
 4. The page catches the error and calls `notFound()`
 5. Next.js shows the `app/not-found.tsx` page
 
-### The 404 Page
-
-```tsx
-// app/not-found.tsx
-import Link from 'next/link';
-
-export default function NotFound() {
-  return (
-    <main className="container mx-auto px-4 py-8 text-center">
-      <h1 className="text-4xl font-bold text-zinc-900 dark:text-zinc-50 mb-4">
-        404
-      </h1>
-      <p className="text-zinc-600 dark:text-zinc-400 mb-6">
-        La página que buscas no existe.
-      </p>
-      <Link
-        href="/"
-        className="text-zinc-900 dark:text-zinc-50 underline hover:no-underline"
-      >
-        Volver al inicio
-      </Link>
-    </main>
-  );
-}
-```
-
 ## How to Add Support for New Indicators
 
 The application automatically supports any indicator that mindicador.cl provides. No code changes are needed to support new indicators.
@@ -309,25 +416,9 @@ The application automatically supports any indicator that mindicador.cl provides
 3. The detail page uses the indicator code from the URL
 4. If the code exists in the API, it works
 
-### If You Need to Filter Indicators
-
-To explicitly allow or deny certain indicators, modify the home page:
-
-```tsx
-// In components/home/indicators-list.tsx
-const allowedCodes = ['dolar', 'euro', 'uf', 'utm', 'bitcoin'];
-
-const indicatorValues = Object.entries(indicators)
-  .filter(([_, value]) =>
-    typeof value === 'object' &&
-    'codigo' in value &&
-    allowedCodes.includes((value as IndicatorValue).codigo)
-  );
-```
-
 ### Adding Custom Indicator Metadata
 
-If you need to display custom information for certain indicators (like descriptions or icons), create a mapping:
+If you need to display custom information for certain indicators:
 
 ```tsx
 // lib/constants/indicators.ts
@@ -342,11 +433,8 @@ export const indicatorMeta: Record<string, { icon: string; description: string }
   },
   // ...
 };
-```
 
-Then use it in the component:
-
-```tsx
+// Usage in component:
 const meta = indicatorMeta[indicator.codigo];
 ```
 
@@ -354,80 +442,48 @@ const meta = indicatorMeta[indicator.codigo];
 
 ### Showing More Historical Values
 
-Currently, only 10 values are shown:
+Currently, the range selector determines how many values are shown. To change the options:
 
 ```tsx
-<IndicatorSeriesList serie={data.serie.slice(0, 10)} />
+// components/detail/range-selector.tsx
+const RANGES = [
+  { value: 7, label: '7 días' },
+  { value: 30, label: '30 días' },
+  { value: 90, label: '90 días' },
+  { value: 180, label: '6 meses' }  // Add new option
+];
 ```
 
-To show more, change the slice:
+Note: The API may not provide data beyond a certain range.
+
+### Customizing the Chart
+
+To change chart appearance, modify `LineChartBase`:
 
 ```tsx
-<IndicatorSeriesList serie={data.serie.slice(0, 30)} />  // Show all
+<Line
+  type="monotone"        // Try "linear" or "step"
+  strokeWidth={2}        // Thicker or thinner line
+  dot={true}            // Show dots on data points
+  activeDot={{ r: 6 }}  // Larger hover dot
+/>
 ```
 
-Or make it configurable:
+### Adding New Analytics
+
+To add a new derived value:
 
 ```tsx
-const ITEMS_TO_SHOW = 15;
-<IndicatorSeriesList serie={data.serie.slice(0, ITEMS_TO_SHOW)} />
-```
+// In IndicatorHistory
+const average = useMemo(() => {
+  const sum = displayedSerie.reduce((acc, item) => acc + item.valor, 0);
+  return sum / displayedSerie.length;
+}, [displayedSerie]);
 
-### Adding a Chart
-
-To add a visual chart:
-
-1. Install a chart library (e.g., Chart.js, Recharts)
-2. Create a new Client Component (charts need browser APIs)
-3. Pass the series data to the chart component
-
-```tsx
-// components/detail/indicator-chart.tsx
-'use client';
-
-import { SerieItem } from '@/lib/api/mindicador';
-// import chart library...
-
-export function IndicatorChart({ serie }: { serie: SerieItem[] }) {
-  // Reverse to show oldest first for charts
-  const chartData = [...serie].reverse();
-
-  return (
-    <div className="h-64">
-      {/* Chart implementation */}
-    </div>
-  );
-}
-```
-
-### Adding Value Change Indicators
-
-To show if the value went up or down:
-
-```tsx
-// components/detail/indicator-series-item.tsx
-interface IndicatorSeriesItemProps {
-  item: SerieItem;
-  previousValue?: number;
-}
-
-export function IndicatorSeriesItem({ item, previousValue }: IndicatorSeriesItemProps) {
-  const change = previousValue ? item.valor - previousValue : 0;
-  const changeIcon = change > 0 ? '↑' : change < 0 ? '↓' : '→';
-  const changeColor = change > 0 ? 'text-green-500' : change < 0 ? 'text-red-500' : '';
-
-  return (
-    <li className="py-3 flex justify-between items-center">
-      <span className="text-sm text-zinc-600 dark:text-zinc-400">
-        {formattedDate}
-      </span>
-      <span className="font-medium text-zinc-900 dark:text-zinc-50 tabular-nums">
-        {formattedValue}
-        <span className={`ml-2 ${changeColor}`}>{changeIcon}</span>
-      </span>
-    </li>
-  );
-}
+// In the JSX
+<Tooltip content="Promedio del período">
+  <span>Prom: {formatValue(average, unidadMedida)}</span>
+</Tooltip>
 ```
 
 ## Testing Considerations
@@ -437,7 +493,10 @@ When testing the indicator detail page:
 1. **Valid indicator codes**: Page renders with correct data
 2. **Invalid indicator codes**: 404 page is shown
 3. **API errors**: Error message is displayed
-4. **Date formatting**: Dates appear in Spanish format
-5. **Number formatting**: Values use Chilean locale
-6. **Navigation**: Back button returns to home
-7. **Series length**: Correct number of items shown
+4. **Range selector**: Changing range updates chart and analytics
+5. **Chart rendering**: Chart displays correctly with data
+6. **Analytics accuracy**: Min, max, delta match displayed data
+7. **Tooltips**: Hovering shows explanatory text
+8. **Date formatting**: Dates appear in Spanish format
+9. **Number formatting**: Values use Chilean locale
+10. **Navigation**: Back button returns to home

@@ -1,6 +1,6 @@
 # Conversion Feature
 
-The conversion feature allows users to convert amounts between different Chilean economic indicators. It's available at the `/convert` URL.
+The conversion feature allows users to convert amounts between different Chilean economic indicators. It's available at the `/convert` URL and supports smart defaults, real-time calculation, and persistent state.
 
 ## How the Conversion Feature Works
 
@@ -10,7 +10,7 @@ The conversion tool takes three inputs:
 2. **From indicator**: The source currency/indicator
 3. **To indicator**: The target currency/indicator
 
-The tool then calculates the equivalent value in the target indicator.
+The tool calculates the equivalent value in real time as you type, and the result persists across page visits.
 
 ### The Core Concept
 
@@ -50,12 +50,12 @@ The mindicador.cl API provides all indicator values in pesos. This assumption is
 Chilean Peso (CLP) is not provided by the API as an indicator (since all values are already in pesos). The application adds CLP as a "virtual" indicator with a value of 1:
 
 ```typescript
-const clpIndicator: IndicatorValue = {
+const CLP_INDICATOR: IndicatorValue = {
   codigo: 'clp',
   nombre: 'Peso Chileno',
   unidad_medida: 'Pesos',
-  fecha: new Date().toISOString(),
-  valor: 1
+  fecha: '',
+  valor: 1  // Always 1
 };
 ```
 
@@ -103,15 +103,111 @@ clpValue = 1000000 × 1 = 1,000,000
 result = 1,000,000 ÷ 36,789.45 = 27.18
 ```
 
-**Example 3: UF to CLP**
-```
-amount = 10
-fromIndicator.valor = 36789.45
-toIndicator.valor = 1 (CLP)
+## How Contextual Entry Works
 
-clpValue = 10 × 36,789.45 = 367,894.50
-result = 367,894.50 ÷ 1 = 367,894.50
+The conversion page supports URL query parameters to pre-fill the form:
+
+### URL Format
+
 ```
+/convert?from=dolar
+/convert?from=uf&to=clp
+```
+
+### Implementation
+
+```tsx
+// In ConversionForm
+const searchParams = useSearchParams();
+
+useEffect(() => {
+  const fromParam = searchParams.get('from');
+  const toParam = searchParams.get('to');
+
+  if (fromParam) {
+    setFromCode(fromParam);
+    // Set opposite currency as smart default
+    if (!toParam) {
+      setToCode(fromParam === 'clp' ? 'uf' : 'clp');
+    }
+  }
+  if (toParam) {
+    setToCode(toParam);
+  }
+}, [searchParams]);
+```
+
+### Use Cases
+
+1. **From indicator detail page**: Link says "Convertir" → goes to `/convert?from=dolar`
+2. **From home page**: Quick conversion link for each indicator
+3. **Direct linking**: Share a conversion URL with someone
+
+## How Real-Time Recalculation Is Handled
+
+The form updates the result as you type, without requiring a "Convert" button click.
+
+### Implementation
+
+```tsx
+// In ConversionForm
+useEffect(() => {
+  performConversion();
+}, [amount, fromCode, toCode]);
+
+const performConversion = useCallback(() => {
+  const parsedAmount = parseFloat(amount);
+  if (isNaN(parsedAmount) || parsedAmount <= 0) return;
+  if (fromCode === toCode) return;
+  if (!fromCode || !toCode) return;
+
+  const fromIndicator = indicators.find(i => i.codigo === fromCode);
+  const toIndicator = indicators.find(i => i.codigo === toCode);
+
+  if (!fromIndicator || !toIndicator) return;
+
+  const clpValue = parsedAmount * fromIndicator.valor;
+  const result = clpValue / toIndicator.valor;
+
+  onConvert({
+    amount: parsedAmount,
+    fromIndicator,
+    toIndicator,
+    result
+  });
+}, [amount, fromCode, toCode, indicators, onConvert]);
+```
+
+### Why useCallback?
+
+The `useCallback` hook ensures the function reference stays stable unless its dependencies change. This prevents unnecessary effect re-runs.
+
+## How Atomic Swap Works
+
+The swap button exchanges the "from" and "to" indicators instantly.
+
+### Implementation
+
+```tsx
+// In ConversionForm
+function handleSwap() {
+  const temp = fromCode;
+  setFromCode(toCode);
+  setToCode(temp);
+}
+
+// In the JSX
+<button type="button" onClick={handleSwap} aria-label="Intercambiar">
+  ↔
+</button>
+```
+
+### Behavior
+
+- Click swaps from ↔ to
+- Amount stays the same
+- Result recalculates automatically (via useEffect)
+- Persisted state updates accordingly
 
 ## Code Structure
 
@@ -120,11 +216,11 @@ The conversion feature spans multiple files:
 ```
 app/convert/
 ├── page.tsx              # Server Component (fetches data)
-└── conversion-client.tsx # Client Component (handles interaction)
+└── conversion-client.tsx # Client Component (orchestrates interaction)
 
 components/conversion/
-├── conversion-form.tsx   # Form inputs
-└── conversion-result.tsx # Result display
+├── conversion-form.tsx   # Form inputs with swap and real-time calculation
+└── conversion-result.tsx # Result display card
 ```
 
 ### Server Component: `page.tsx`
@@ -137,19 +233,13 @@ import { ConversionClient } from './conversion-client';
 export default async function ConvertPage() {
   const data = await getAllIndicators();
   return (
-    <main className="container mx-auto px-4 py-8">
-      <BackButton />
-      <h1 className="text-2xl font-bold mb-6">Convertir</h1>
+    <main>
+      <h1>Convertir</h1>
       <ConversionClient indicators={data} />
     </main>
   );
 }
 ```
-
-This component:
-- Runs on the server
-- Fetches all indicator data
-- Passes data to the client component
 
 ### Client Component: `conversion-client.tsx`
 
@@ -157,68 +247,33 @@ This component:
 // app/convert/conversion-client.tsx
 'use client';
 
-import { useState } from 'react';
-import { GlobalIndicatorsResponse, IndicatorValue } from '@/lib/api/mindicador';
-import { ConversionForm } from '@/components/conversion/conversion-form';
-import { ConversionResult } from '@/components/conversion/conversion-result';
+export function ConversionClient({ indicators }) {
+  const { conversion, setConversion, swapCodes } = usePersistedConversion();
 
-interface ConversionClientProps {
-  indicators: GlobalIndicatorsResponse;
-}
-
-interface ConversionData {
-  amount: number;
-  fromName: string;
-  toName: string;
-  result: number;
-}
-
-export function ConversionClient({ indicators }: ConversionClientProps) {
-  const [conversionData, setConversionData] = useState<ConversionData | null>(null);
-
-  // Extract indicator values and add CLP
-  const indicatorValues = extractIndicators(indicators);
-  const indicatorsWithClp = [createClpIndicator(), ...indicatorValues];
-
-  function handleConvert({
-    amount,
-    fromIndicator,
-    toIndicator
-  }: {
-    amount: number;
-    fromIndicator: IndicatorValue;
-    toIndicator: IndicatorValue;
-  }) {
-    const clpValue = amount * fromIndicator.valor;
-    const result = clpValue / toIndicator.valor;
-
-    setConversionData({
-      amount,
-      fromName: fromIndicator.nombre,
-      toName: toIndicator.nombre,
-      result
-    });
-  }
+  // Add CLP as virtual indicator
+  const allIndicators = [CLP_INDICATOR, ...extractIndicators(indicators)];
 
   return (
-    <div className="space-y-6">
+    <div>
       <ConversionForm
-        indicators={indicatorsWithClp}
-        onConvert={handleConvert}
+        indicators={allIndicators}
+        initialFromCode={conversion?.fromCode}
+        initialToCode={conversion?.toCode}
+        onConvert={setConversion}
+        onSwap={swapCodes}
       />
-      {conversionData && (
-        <ConversionResult {...conversionData} />
+      {conversion && (
+        <ConversionResult
+          amount={conversion.amount}
+          fromName={conversion.fromIndicator.nombre}
+          toName={conversion.toIndicator.nombre}
+          result={conversion.result}
+        />
       )}
     </div>
   );
 }
 ```
-
-This component:
-- Runs in the browser
-- Manages conversion state with `useState`
-- Performs the calculation when form is submitted
-- Displays results
 
 ### Form Component: `conversion-form.tsx`
 
@@ -226,106 +281,53 @@ This component:
 // components/conversion/conversion-form.tsx
 'use client';
 
-import { useState, FormEvent } from 'react';
-import { IndicatorValue } from '@/lib/api/mindicador';
-
-interface ConversionFormProps {
-  indicators: IndicatorValue[];
-  onConvert: (params: {
-    amount: number;
-    fromIndicator: IndicatorValue;
-    toIndicator: IndicatorValue;
-  }) => void;
-}
-
-export function ConversionForm({ indicators, onConvert }: ConversionFormProps) {
+export function ConversionForm({
+  indicators,
+  initialFromCode,
+  initialToCode,
+  onConvert,
+  onSwap
+}) {
   const [amount, setAmount] = useState('');
-  const [fromCode, setFromCode] = useState('');
-  const [toCode, setToCode] = useState('');
+  const [fromCode, setFromCode] = useState(initialFromCode || 'uf');
+  const [toCode, setToCode] = useState(initialToCode || 'clp');
 
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault();
+  // Real-time calculation effect
+  useEffect(() => {
+    performConversion();
+  }, [amount, fromCode, toCode]);
 
-    const numAmount = parseFloat(amount);
-    if (isNaN(numAmount) || numAmount <= 0) return;
-
-    const fromIndicator = indicators.find(i => i.codigo === fromCode);
-    const toIndicator = indicators.find(i => i.codigo === toCode);
-
-    if (!fromIndicator || !toIndicator) return;
-    if (fromCode === toCode) return;
-
-    onConvert({
-      amount: numAmount,
-      fromIndicator,
-      toIndicator
-    });
+  function handleSwap() {
+    const temp = fromCode;
+    setFromCode(toCode);
+    setToCode(temp);
+    onSwap?.();
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Amount input */}
-      <div>
-        <label htmlFor="amount" className="block text-sm font-medium">
-          Cantidad
-        </label>
-        <input
-          type="number"
-          id="amount"
-          min="0"
-          step="any"
-          value={amount}
-          onChange={e => setAmount(e.target.value)}
-          className="mt-1 w-full rounded-md border ..."
-        />
-      </div>
+    <form>
+      <Input
+        label="Cantidad"
+        type="number"
+        value={amount}
+        onChange={e => setAmount(e.target.value)}
+      />
 
-      {/* From dropdown */}
-      <div>
-        <label htmlFor="from" className="block text-sm font-medium">
-          De
-        </label>
-        <select
-          id="from"
-          value={fromCode}
-          onChange={e => setFromCode(e.target.value)}
-          className="mt-1 w-full rounded-md border ..."
-        >
-          <option value="">Seleccionar...</option>
-          {indicators.map(ind => (
-            <option key={ind.codigo} value={ind.codigo}>
-              {ind.nombre}
-            </option>
-          ))}
-        </select>
-      </div>
+      <Select
+        label="De"
+        value={fromCode}
+        onChange={e => setFromCode(e.target.value)}
+        options={indicators}
+      />
 
-      {/* To dropdown */}
-      <div>
-        <label htmlFor="to" className="block text-sm font-medium">
-          A
-        </label>
-        <select
-          id="to"
-          value={toCode}
-          onChange={e => setToCode(e.target.value)}
-          className="mt-1 w-full rounded-md border ..."
-        >
-          <option value="">Seleccionar...</option>
-          {indicators.map(ind => (
-            <option key={ind.codigo} value={ind.codigo}>
-              {ind.nombre}
-            </option>
-          ))}
-        </select>
-      </div>
+      <button type="button" onClick={handleSwap}>↔</button>
 
-      <button
-        type="submit"
-        className="w-full py-2 px-4 rounded-md bg-zinc-900 text-white ..."
-      >
-        Convertir
-      </button>
+      <Select
+        label="A"
+        value={toCode}
+        onChange={e => setToCode(e.target.value)}
+        options={indicators}
+      />
     </form>
   );
 }
@@ -335,41 +337,69 @@ export function ConversionForm({ indicators, onConvert }: ConversionFormProps) {
 
 ```tsx
 // components/conversion/conversion-result.tsx
-interface ConversionResultProps {
-  amount: number;
-  fromName: string;
-  toName: string;
-  result: number;
-}
-
-export function ConversionResult({
-  amount,
-  fromName,
-  toName,
-  result
-}: ConversionResultProps) {
-  const formattedAmount = amount.toLocaleString('es-CL', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-
-  const formattedResult = result.toLocaleString('es-CL', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 4
-  });
-
+export function ConversionResult({ amount, fromName, toName, result }) {
   return (
-    <div className="p-4 rounded-lg bg-zinc-50 dark:bg-zinc-900 border ...">
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">
-        {formattedAmount} {fromName} =
-      </p>
-      <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-        {formattedResult} {toName}
-      </p>
+    <div className="result-card">
+      <p>{formatValue(amount)} {fromName} equivale a</p>
+      <p className="text-2xl font-bold">{formatValue(result)}</p>
+      <p>{toName}</p>
     </div>
   );
 }
 ```
+
+## State Persistence
+
+Conversion state is persisted to localStorage using `usePersistedConversion`:
+
+```tsx
+// lib/storage.ts
+const CONVERSION_KEY = 'divisapp_last_conversion';
+
+export function usePersistedConversion() {
+  const conversion = useSyncExternalStore(
+    subscribe,
+    getConversionSnapshot,
+    getServerConversionSnapshot
+  );
+
+  function setConversion(data) {
+    localStorage.setItem(CONVERSION_KEY, JSON.stringify(data));
+    notifyListeners();
+  }
+
+  function swapCodes() {
+    if (conversion) {
+      setConversion({
+        ...conversion,
+        fromCode: conversion.toCode,
+        toCode: conversion.fromCode
+      });
+    }
+  }
+
+  return { conversion, setConversion, swapCodes };
+}
+```
+
+### What's Persisted
+
+```typescript
+{
+  amount: number;
+  fromCode: string;
+  toCode: string;
+  fromIndicator: IndicatorValue;
+  toIndicator: IndicatorValue;
+  result: number;
+}
+```
+
+### Benefits
+
+- Returning to the page restores your last conversion
+- The result is immediately visible without re-entering data
+- State survives page refreshes and browser restarts
 
 ## Visual Layout
 
@@ -389,15 +419,16 @@ export function ConversionResult({
 │  │ De                                               │   │
 │  │ [Dólar observado                         ▼]     │   │
 │  │                                                  │   │
+│  │              [↔ Intercambiar]                    │   │
+│  │                                                  │   │
 │  │ A                                                │   │
 │  │ [Euro                                    ▼]     │   │
-│  │                                                  │   │
-│  │ [          Convertir                      ]      │   │
 │  └─────────────────────────────────────────────────┘   │
 │                                                         │
 │  ┌─────────────────────────────────────────────────┐   │
-│  │ 100,00 Dólar observado =                        │   │
-│  │ 91,80 Euro                                      │   │
+│  │ 100,00 Dólar observado equivale a               │   │
+│  │ 91,80                                           │   │
+│  │ Euro                                            │   │
 │  └─────────────────────────────────────────────────┘   │
 │                                                         │
 └─────────────────────────────────────────────────────────┘
@@ -405,16 +436,16 @@ export function ConversionResult({
 
 ## Validation Rules
 
-The form validates inputs before performing conversions:
+The form validates inputs and only shows results when valid:
 
-| Validation | Message/Behavior |
-|------------|------------------|
-| Amount is empty | Form doesn't submit |
-| Amount is 0 or negative | Form doesn't submit |
-| From not selected | Form doesn't submit |
-| To not selected | Form doesn't submit |
-| From equals To | Form doesn't submit |
-| Division by zero | Protected (indicators always have values > 0) |
+| Validation | Behavior |
+|------------|----------|
+| Amount is empty | No result shown |
+| Amount is 0 or negative | No result shown |
+| From not selected | No result shown |
+| To not selected | No result shown |
+| From equals To | No result shown |
+| Valid inputs | Result updates in real time |
 
 ## How to Extend or Modify Conversion Logic
 
@@ -423,56 +454,35 @@ The form validates inputs before performing conversions:
 To add a conversion fee:
 
 ```tsx
-function handleConvert({ amount, fromIndicator, toIndicator }) {
-  const FEE_PERCENTAGE = 0.01; // 1% fee
+const FEE_PERCENTAGE = 0.01; // 1% fee
 
-  const clpValue = amount * fromIndicator.valor;
-  const rawResult = clpValue / toIndicator.valor;
-  const result = rawResult * (1 - FEE_PERCENTAGE);
+const clpValue = amount * fromIndicator.valor;
+const rawResult = clpValue / toIndicator.valor;
+const result = rawResult * (1 - FEE_PERCENTAGE);
 
-  setConversionData({
-    amount,
-    fromName: fromIndicator.nombre,
-    toName: toIndicator.nombre,
-    result,
-    fee: rawResult * FEE_PERCENTAGE  // Add fee to display
-  });
-}
+// Optionally show the fee
+const fee = rawResult * FEE_PERCENTAGE;
 ```
 
-### Supporting Historical Conversions
+### Adding More Synthetic Indicators
 
-To convert using a specific date's values:
-
-1. Add a date picker to the form
-2. Create a new API function to fetch historical rates
-3. Use historical values in the calculation
+To add custom indicators that aren't from the API:
 
 ```tsx
-// New API function needed
-async function getIndicatorByDate(codigo: string, date: string) {
-  // Implementation depends on mindicador.cl API support
-}
-```
-
-### Adding More Indicators
-
-The form automatically includes all indicators from the API plus CLP. To add custom indicators:
-
-```tsx
-const customIndicators: IndicatorValue[] = [
+const CUSTOM_INDICATORS: IndicatorValue[] = [
   {
     codigo: 'custom',
     nombre: 'Custom Currency',
     unidad_medida: 'Pesos',
-    fecha: new Date().toISOString(),
+    fecha: '',
     valor: 123.45  // Value in CLP
   }
 ];
 
 const allIndicators = [
-  ...indicatorsWithClp,
-  ...customIndicators
+  CLP_INDICATOR,
+  ...extractIndicators(apiResponse),
+  ...CUSTOM_INDICATORS
 ];
 ```
 
@@ -481,37 +491,10 @@ const allIndicators = [
 To display the exchange rate alongside the result:
 
 ```tsx
-function handleConvert({ amount, fromIndicator, toIndicator }) {
-  const clpValue = amount * fromIndicator.valor;
-  const result = clpValue / toIndicator.valor;
-  const exchangeRate = fromIndicator.valor / toIndicator.valor;
+const exchangeRate = fromIndicator.valor / toIndicator.valor;
 
-  setConversionData({
-    amount,
-    fromName: fromIndicator.nombre,
-    toName: toIndicator.nombre,
-    result,
-    exchangeRate  // 1 FROM = X TO
-  });
-}
-```
-
-### Swap Button
-
-To add a button that swaps the from/to indicators:
-
-```tsx
-// In ConversionForm
-function handleSwap() {
-  const temp = fromCode;
-  setFromCode(toCode);
-  setToCode(temp);
-}
-
-// In the JSX
-<button type="button" onClick={handleSwap} className="...">
-  ↔ Intercambiar
-</button>
+// In the result display
+<p>Tipo de cambio: 1 {fromIndicator.nombre} = {formatValue(exchangeRate)} {toIndicator.nombre}</p>
 ```
 
 ## Testing Considerations
@@ -520,10 +503,14 @@ When testing the conversion feature:
 
 1. **Basic conversion**: USD to EUR produces correct result
 2. **CLP conversion**: CLP to USD and USD to CLP work correctly
-3. **Same indicator**: Cannot convert USD to USD
-4. **Zero amount**: Form doesn't submit
-5. **Negative amount**: Form doesn't submit
-6. **Empty selections**: Form doesn't submit
-7. **Number formatting**: Results use Chilean locale
-8. **Large numbers**: No overflow or precision issues
-9. **Small numbers**: Decimal precision is preserved
+3. **Same indicator**: Cannot convert USD to USD (no result shown)
+4. **Zero amount**: No result shown
+5. **Negative amount**: No result shown
+6. **Empty selections**: No result shown
+7. **Real-time update**: Typing updates result immediately
+8. **Swap button**: Exchanges from/to correctly
+9. **Persistence**: Refreshing page restores last conversion
+10. **URL parameters**: `/convert?from=dolar` pre-fills form
+11. **Number formatting**: Results use Chilean locale
+12. **Large numbers**: No overflow or precision issues
+13. **Small numbers**: Decimal precision is preserved

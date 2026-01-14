@@ -7,8 +7,9 @@ This document explains the high-level architecture of DivisApp and the reasoning
 DivisApp is a web application that:
 
 1. Fetches economic indicator data from an external API (mindicador.cl)
-2. Displays that data to users in a readable format
+2. Displays that data to users in a readable format with charts and analytics
 3. Allows users to convert between different currencies
+4. Stores user preferences (favorites) locally in the browser
 
 The application runs in a web browser but also has code that runs on a server. Understanding this distinction is key to understanding how the application works.
 
@@ -20,6 +21,7 @@ The application runs in a web browser but also has code that runs on a server. U
 | React | 19.2.3 | User interface library |
 | TypeScript | 5.x | Type-safe JavaScript |
 | Tailwind CSS | 4.x | Styling |
+| Recharts | 3.6.0 | Chart library |
 | Vitest | 4.0.17 | Testing |
 
 ## Why Next.js with App Router?
@@ -77,7 +79,7 @@ In DivisApp, the page components are Server Components. They fetch data from min
 // This runs on the server
 export default async function Home() {
   const data = await getAllIndicators();  // API call happens on server
-  return <IndicatorsList indicators={data} />;
+  return <HomeIndicators indicators={data} />;
 }
 ```
 
@@ -90,7 +92,7 @@ These components run **in the browser**. They:
 - Must be marked with `'use client'` at the top of the file
 - Are needed for forms, buttons, and anything interactive
 
-In DivisApp, the conversion form is a Client Component because it needs to track user input:
+In DivisApp, interactive features like the conversion form and favorites toggle are Client Components:
 
 ```tsx
 'use client';  // This tells Next.js to run this in the browser
@@ -116,7 +118,9 @@ Here's a breakdown of where different parts of the application execute:
 
 - Client Components (anything with `'use client'`)
 - Form interactions (typing, selecting, clicking)
-- State management for the conversion tool
+- State management for favorites and conversion
+- Chart rendering (Recharts)
+- localStorage access for persistence
 - CSS and visual rendering
 
 ### The Flow
@@ -134,7 +138,7 @@ User requests /dolar
         ↓
 [Browser] React "hydrates" (makes interactive)
         ↓
-[Browser] User sees the page
+[Browser] User sees the page with charts
 ```
 
 ## How Pages Are Rendered
@@ -174,6 +178,7 @@ React runs again in the browser to "hydrate" the page. This means:
 - Attaching event listeners to buttons and forms
 - Making Client Components interactive
 - Setting up state management
+- Initializing charts with Recharts
 
 After hydration, the page is fully interactive.
 
@@ -194,6 +199,35 @@ This means:
 - After 1 hour, the next request fetches fresh data again
 
 This improves performance and reduces load on the external API.
+
+## Local State Management
+
+DivisApp stores certain data in the browser's localStorage:
+
+### Favorites
+
+User's favorite indicators are stored locally so they persist across sessions:
+
+```tsx
+// Using useSyncExternalStore for SSR-safe localStorage access
+const { favorites, toggleFavorite } = useFavorites();
+```
+
+### Conversion State
+
+The last conversion (amount, indicators, result) is persisted:
+
+```tsx
+const { conversion, setConversion } = usePersistedConversion();
+```
+
+### Why useSyncExternalStore?
+
+React's `useSyncExternalStore` hook provides:
+
+- SSR-safe hydration (avoids mismatch between server and client)
+- Automatic re-renders when localStorage changes
+- Support for cross-tab synchronization
 
 ## Error Handling Strategy
 
@@ -262,6 +296,7 @@ DivisApp uses Next.js with the App Router to create a server-rendered applicatio
 - Clean code organization (file-based routing)
 - Good separation of concerns (server vs. client code)
 - Built-in caching (1-hour data freshness)
+- Local persistence (favorites and conversion state)
 - Robust error handling (API, page, and global levels)
 
 The key concept to understand is the difference between Server Components (run on the server, fetch data) and Client Components (run in the browser, handle interactivity).

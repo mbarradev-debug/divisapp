@@ -2,92 +2,95 @@
 
 ## What is DivisApp?
 
-DivisApp is a web application that displays Chilean economic indicators and provides currency conversion functionality. It fetches real-time data from the [mindicador.cl](https://mindicador.cl) API, which is a free public API that provides current and historical values for various Chilean economic indicators.
+DivisApp is a web application that displays real-time economic indicators from Chile. It shows the current values of financial indicators like the UF (Unidad de Fomento), US Dollar, Euro, Bitcoin, and others, along with their historical data and trends.
 
-The application allows users to:
+The application provides:
 
-- View a list of current economic indicators (Dollar, Euro, UF, UTM, Bitcoin, etc.)
-- See detailed historical data for any indicator
-- Convert amounts between different indicators and Chilean Pesos (CLP)
+- A home page showing all indicators with favorites at the top
+- Detail pages with historical charts, trend analysis, and range selection
+- A currency conversion tool with smart defaults and real-time calculation
+- Local persistence for favorites and conversion state
 
 ## What Problem Does It Solve?
 
-Accessing economic indicators in Chile typically requires visiting multiple government websites or using complex financial tools. DivisApp provides a simple, user-friendly interface to:
+Chile has several unique economic indicators that people need to check regularly:
 
-1. **Quick Reference**: See all major indicators at a glance on the home page
-2. **Historical Trends**: View the last 10 values for any indicator to understand recent trends
-3. **Currency Conversion**: Convert between different currencies and indicators without manual calculations
+- **UF (Unidad de Fomento)**: A unit of account that adjusts daily for inflation, used in mortgages and contracts
+- **UTM (Unidad Tributaria Mensual)**: A monthly tax unit used for calculating fines and fees
+- **Dollar and Euro**: Exchange rates that affect imports, travel, and investments
+- **IPC**: The consumer price index measuring inflation
+
+Before DivisApp, checking these values required visiting government websites or financial portals with cluttered interfaces. DivisApp provides a clean, mobile-friendly way to:
+
+1. See all indicators at a glance with favorites first
+2. View historical trends with interactive charts
+3. Analyze changes over 7, 30, or 90 day periods
+4. Convert between different currencies and indicators
+5. Get smart conversion defaults based on context
 
 ## Who Is This Documentation For?
 
-This documentation is written for developers who:
+This documentation is written for developers who need to understand, maintain, or extend DivisApp. It assumes you are:
 
-- Are new to the project and need to understand how it works
-- Have limited or no experience with Next.js, React Server Components, or the App Router
-- Want to contribute to the project or extend its functionality
-- Need to maintain or debug the application
+- Familiar with basic programming concepts
+- Learning or working with JavaScript/TypeScript
+- New to Next.js, React Server Components, or modern React patterns
 
-The documentation assumes you are intelligent but may not be familiar with modern web development concepts. All technical terms are explained in plain language.
+If you have never used Next.js before, start with the **Architecture Overview** section, which explains the core concepts from first principles.
 
 ## How to Navigate This Documentation
 
-The documentation is organized into the following sections:
+The documentation is organized into several sections:
 
-### Architecture (`/architecture`)
+### Getting Started
 
-Start here if you want to understand **how the application is built**:
+- **[Development Setup](development/setup.md)**: How to install and run the project locally
 
-- [Overview](./architecture/overview.md) - High-level architecture and technology choices
-- [Folder Structure](./architecture/folder-structure.md) - What each folder and file does
-- [Data Flow](./architecture/data-flow.md) - How data moves through the application
-- [Typography](./architecture/typography.md) - Font choice and typography system
-- [Colors](./architecture/colors.md) - Color palette and design tokens
+### Understanding the Architecture
 
-### Features (`/features`)
+- **[Architecture Overview](architecture/overview.md)**: The big picture of how the application works
+- **[Folder Structure](architecture/folder-structure.md)**: Where files live and what each folder contains
+- **[Data Flow](architecture/data-flow.md)**: How data moves from the API to the user interface
+- **[UX Decisions](architecture/ux-decisions.md)**: Why the user experience is designed the way it is
 
-Read these to understand **what the application does**:
+### Features
 
-- [Home Page](./features/home.md) - The main indicators list
-- [Indicator Detail](./features/indicator-detail.md) - Individual indicator pages
-- [Conversion](./features/conversion.md) - The currency conversion tool
+- **[Home Page](features/home.md)**: How the main indicator list and favorites work
+- **[Indicator Detail](features/indicator-detail.md)**: How detail pages with charts and analytics work
+- **[Conversion](features/conversion.md)**: How the currency conversion feature works
 
-### Development (`/development`)
+### Development Workflow
 
-Use these when you need to **work on the code**:
+- **[Daily Workflows](development/workflows.md)**: How to work on tasks day-to-day
+- **[Branching and Commits](development/branching-and-commits.md)**: Git conventions and practices
 
-- [Setup](./development/setup.md) - How to run the project locally
-- [Workflows](./development/workflows.md) - Daily development practices
-- [Branching and Commits](./development/branching-and-commits.md) - Git conventions
+### Releases
 
-### Release (`/release`)
+- **[Versioning](release/versioning.md)**: How versions are numbered and released
 
-Reference these for **versioning and releases**:
+### Version History
 
-- [Versioning](./release/versioning.md) - How versions are managed
-
-### Versions (`/versions`)
-
-Each major release has its own documentation:
-
-- [v1.0.0](./versions/v1.0.0.md) - Initial release
+- **[v1.1.0](versions/v1.1.0.md)**: Current version (favorites, charts, smart conversion)
+- **[v1.0.0](versions/v1.0.0.md)**: Initial release
 
 ## How Documentation Evolves
 
-This documentation follows the same versioning as the application code:
+This documentation follows the codebase. Each significant release has its own version document in the `versions/` folder that describes:
 
-1. When a new Git tag is created (e.g., `v1.1.0`), a new version file is added to `/versions`
-2. The version file documents what features are available in that release
-3. Architecture and feature documentation is updated to reflect the current state
-4. Previous version documentation remains available for reference
+- What features are available in that version
+- What changed from the previous version
+- What is intentionally not yet implemented
 
-This approach ensures that developers working with older versions can still find accurate documentation for their version.
+When you update the code significantly, create a new version document. Previous version documents are never modified—they serve as historical records of what the project looked like at each release point.
 
 ## Quick Links
 
 | I want to... | Go to... |
 |--------------|----------|
-| Run the project locally | [Development Setup](./development/setup.md) |
-| Understand the architecture | [Architecture Overview](./architecture/overview.md) |
-| Add a new feature | [Folder Structure](./architecture/folder-structure.md) |
-| Fix a bug | [Data Flow](./architecture/data-flow.md) |
-| Create a release | [Versioning](./release/versioning.md) |
+| Run the project locally | [Development Setup](development/setup.md) |
+| Understand how the app works | [Architecture Overview](architecture/overview.md) |
+| Add a new feature | [Folder Structure](architecture/folder-structure.md) |
+| Understand data flow | [Data Flow](architecture/data-flow.md) |
+| See what version 1.1.0 includes | [v1.1.0](versions/v1.1.0.md) |
+| Learn Git conventions | [Branching and Commits](development/branching-and-commits.md) |
+| Understand UX choices | [UX Decisions](architecture/ux-decisions.md) |

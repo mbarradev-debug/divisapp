@@ -7,7 +7,7 @@ This document explains how data moves through DivisApp, from the external API to
 All economic indicator data comes from the **mindicador.cl API**, a free public API provided by the Chilean government. The API has no authentication requirements and provides:
 
 - Current values for economic indicators (Dollar, Euro, UF, UTM, etc.)
-- Historical values for each indicator (last 30 days)
+- Historical values for each indicator (last 30+ days)
 - Metadata about each indicator (name, unit of measurement)
 
 ### API Endpoints Used
@@ -23,19 +23,19 @@ All economic indicator data comes from the **mindicador.cl API**, a free public 
 {
   "version": "1.7.0",
   "autor": "mindicador.cl",
-  "fecha": "2024-01-15T12:00:00.000Z",
+  "fecha": "2025-01-15T12:00:00.000Z",
   "dolar": {
     "codigo": "dolar",
     "nombre": "Dólar observado",
     "unidad_medida": "Pesos",
-    "fecha": "2024-01-15T12:00:00.000Z",
+    "fecha": "2025-01-15T12:00:00.000Z",
     "valor": 895.23
   },
   "euro": {
     "codigo": "euro",
     "nombre": "Euro",
     "unidad_medida": "Pesos",
-    "fecha": "2024-01-15T12:00:00.000Z",
+    "fecha": "2025-01-15T12:00:00.000Z",
     "valor": 975.18
   }
   // ... more indicators
@@ -52,10 +52,10 @@ All economic indicator data comes from the **mindicador.cl API**, a free public 
   "nombre": "Dólar observado",
   "unidad_medida": "Pesos",
   "serie": [
-    { "fecha": "2024-01-15T12:00:00.000Z", "valor": 895.23 },
-    { "fecha": "2024-01-14T12:00:00.000Z", "valor": 893.45 },
-    { "fecha": "2024-01-13T12:00:00.000Z", "valor": 891.00 }
-    // ... up to 30 items
+    { "fecha": "2025-01-15T12:00:00.000Z", "valor": 895.23 },
+    { "fecha": "2025-01-14T12:00:00.000Z", "valor": 893.45 },
+    { "fecha": "2025-01-13T12:00:00.000Z", "valor": 891.00 }
+    // ... up to 30+ items
   ]
 }
 ```
@@ -142,12 +142,8 @@ User navigates to `/` (home page). The request reaches the Next.js server.
 ```tsx
 // app/page.tsx
 export default async function Home() {
-  try {
-    const data = await getAllIndicators();
-    return <IndicatorsList indicators={data} />;
-  } catch (error) {
-    return <ErrorMessage error={error} />;
-  }
+  const data = await getAllIndicators();
+  return <HomeIndicators indicators={data} />;
 }
 ```
 
@@ -159,66 +155,32 @@ The `Home` function is `async`, so it can `await` the API call. This happens on 
 
 ### Step 4: Data Processing
 
-The API response is validated and typed. The raw response becomes a TypeScript object:
+The `HomeIndicators` component splits indicators into favorites and others:
 
 ```tsx
-const data: GlobalIndicatorsResponse = {
-  version: "1.7.0",
-  autor: "mindicador.cl",
-  fecha: "2024-01-15T...",
-  dolar: { codigo: "dolar", nombre: "Dólar observado", ... },
-  euro: { codigo: "euro", nombre: "Euro", ... },
+// components/home/home-indicators.tsx
+export function HomeIndicators({ indicators }) {
+  const { favorites, isFavorite, toggleFavorite, moveFavorite } = useFavorites();
+
+  // Split into favorites and non-favorites
+  const favoriteIndicators = favorites
+    .map(code => indicatorValues.find(i => i.codigo === code))
+    .filter(Boolean);
+
+  const otherIndicators = indicatorValues
+    .filter(i => !favorites.includes(i.codigo));
+
   // ...
 }
 ```
 
-### Step 5: Component Receives Data
+### Step 5: HTML Generation
 
-The `IndicatorsList` component receives the typed data as a prop:
+React converts the component tree into HTML on the server (for the initial render), then the Client Component hydrates in the browser.
 
-```tsx
-// components/home/indicators-list.tsx
-export function IndicatorsList({ indicators }) {
-  // Extract indicator values from the response
-  const indicatorValues = Object.entries(indicators)
-    .filter(([key, value]) =>
-      typeof value === 'object' && value !== null && 'codigo' in value
-    )
-    .map(([, value]) => value as IndicatorValue);
+### Step 6: Response Sent
 
-  return (
-    <div className="grid grid-cols-2 gap-4">
-      {indicatorValues.map(indicator => (
-        <IndicatorItem key={indicator.codigo} indicator={indicator} />
-      ))}
-    </div>
-  );
-}
-```
-
-### Step 6: HTML Generation
-
-React converts the component tree into HTML on the server:
-
-```html
-<div class="grid grid-cols-2 gap-4">
-  <a href="/dolar" class="...">
-    <h2>Dólar observado</h2>
-    <p>895,23</p>
-    <p>Pesos</p>
-  </a>
-  <a href="/euro" class="...">
-    <h2>Euro</h2>
-    <p>975,18</p>
-    <p>Pesos</p>
-  </a>
-  <!-- more indicators -->
-</div>
-```
-
-### Step 7: Response Sent
-
-The complete HTML (including layout, header, etc.) is sent to the browser. The user sees the page immediately with all data already rendered.
+The complete HTML is sent to the browser. Client-side React then takes over for interactivity.
 
 ### Visual Flow
 
@@ -266,13 +228,16 @@ The complete HTML (including layout, header, etc.) is sent to the browser. The u
 │   User Browser  │
 │                 │
 │  Receives HTML  │
-│  Shows page     │
+│  Hydrates React │
+│  useFavorites() │
+│  loads from     │
+│  localStorage   │
 └─────────────────┘
 ```
 
-## Data Flow: Detail Page
+## Data Flow: Detail Page with Charts
 
-The detail page flow is similar but with a dynamic parameter.
+The detail page involves more data processing for charts and analytics.
 
 ### Step 1: URL Parameter Extraction
 
@@ -292,30 +257,72 @@ const data = await getIndicatorByCode(indicator);
 
 The API client uses the parameter to build the URL: `https://mindicador.cl/api/dolar`
 
-### Step 3: Historical Series Processing
+### Step 3: Component Hierarchy
 
-The response includes a `serie` array with historical values. The page shows the last 10:
-
-```tsx
-const recentSeries = data.serie.slice(0, 10);
+```
+IndicatorPage (Server)
+  └─ IndicatorHeader (current value + variation)
+  └─ IndicatorHistory (Client)
+      ├─ RangeSelector (7/30/90 day buttons)
+      ├─ LineChartBase (Recharts wrapper)
+      ├─ Analytics (min, max, delta)
+      └─ IndicatorSeriesList (table of values)
 ```
 
-### Step 4: Date Formatting
+### Step 4: Derived Data Calculations
 
-Each date is formatted for display in Spanish locale:
+In `IndicatorHistory`, data is processed with memoization:
 
 ```tsx
-const formattedDate = new Date(item.fecha).toLocaleDateString('es-CL', {
-  day: 'numeric',
-  month: 'short',
-  year: 'numeric'
-});
-// Result: "15 ene 2024"
+// Memoize filtered history based on range
+const displayedSerie = useMemo(() =>
+  serie.slice(0, range),
+  [serie, range]
+);
+
+// Memoize chart data
+const chartData = useMemo(() => {
+  return [...displayedSerie]
+    .reverse()  // Oldest first for charts
+    .map(item => ({ x: item.fecha, y: item.valor }));
+}, [displayedSerie]);
+
+// Memoize analytics
+const { min, max } = useMemo(() => {
+  const values = displayedSerie.map(i => i.valor);
+  return {
+    min: Math.min(...values),
+    max: Math.max(...values),
+  };
+}, [displayedSerie]);
+
+// Memoize delta (period change)
+const delta = useMemo(() => {
+  if (displayedSerie.length < 2) return 0;
+  return displayedSerie[0].valor - displayedSerie[displayedSerie.length - 1].valor;
+}, [displayedSerie]);
 ```
+
+**Why memoization?** Changing the range selector re-renders the component. Memoization ensures we only recalculate data when the inputs actually change, not on every render.
+
+### Step 5: Chart Rendering
+
+The `LineChartBase` component receives processed chart data:
+
+```tsx
+<LineChartBase
+  data={chartData}
+  xKey="x"
+  yKey="y"
+  unit={unidadMedida}
+/>
+```
+
+Recharts handles the actual SVG rendering in the browser.
 
 ## Data Flow: Conversion Page
 
-The conversion page is more complex because it involves user interaction.
+The conversion page involves both server and client data flow.
 
 ### Server Part (Initial Load)
 
@@ -334,19 +341,28 @@ export default async function ConvertPage() {
 'use client';
 
 export function ConversionClient({ indicators }) {
-  const [result, setResult] = useState(null);
+  const { conversion, setConversion } = usePersistedConversion();
 
   function handleConvert({ amount, fromIndicator, toIndicator }) {
     // Conversion happens in the browser
     const clpValue = amount * fromIndicator.valor;
     const convertedValue = clpValue / toIndicator.valor;
-    setResult(convertedValue);
+
+    setConversion({
+      amount,
+      fromIndicator,
+      toIndicator,
+      result: convertedValue
+    });
   }
 
   return (
     <>
-      <ConversionForm indicators={indicators} onConvert={handleConvert} />
-      {result && <ConversionResult result={result} />}
+      <ConversionForm
+        indicators={indicators}
+        onConvert={handleConvert}
+      />
+      {conversion && <ConversionResult {...conversion} />}
     </>
   );
 }
@@ -357,6 +373,7 @@ export function ConversionClient({ indicators }) {
 1. **Server Component** fetches data (no loading spinner for the user)
 2. **Client Component** handles interactivity (form state, calculations)
 3. Data is passed once from server to client (not re-fetched)
+4. Conversion state persists to localStorage via `usePersistedConversion`
 
 ### Conversion Flow Diagram
 
@@ -391,11 +408,50 @@ export function ConversionClient({ indicators }) {
 │   - result = 89,523 / 975.18 = 91.80 Euro                   │
 │        │                                                    │
 │        ▼                                                    │
-│   setResult(91.80) updates state                            │
+│   setConversion() updates state AND localStorage            │
 │   React re-renders ConversionResult                         │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+## Local Storage Data Flow
+
+Certain data persists in the browser's localStorage.
+
+### Favorites
+
+```tsx
+// lib/storage.ts
+const FAVORITES_KEY = 'divisapp_favorites';
+
+// Reading
+const favorites = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]');
+
+// Writing
+localStorage.setItem(FAVORITES_KEY, JSON.stringify(newFavorites));
+```
+
+The `useFavorites` hook uses `useSyncExternalStore` to:
+
+1. Read initial state from localStorage on hydration
+2. Update localStorage when favorites change
+3. Re-render components when localStorage changes (even from other tabs)
+
+### Conversion State
+
+```tsx
+const CONVERSION_KEY = 'divisapp_last_conversion';
+
+// Stored data shape
+{
+  amount: 100,
+  fromCode: 'dolar',
+  toCode: 'euro',
+  result: 91.80
+}
+```
+
+This allows the last conversion to persist across page refreshes.
 
 ## When and Why Client Components Are Used
 
@@ -414,15 +470,18 @@ All page components in DivisApp are Server Components for these reasons.
 
 Use Client Components when:
 
-- Using React hooks (`useState`, `useEffect`, `useRef`)
+- Using React hooks (`useState`, `useEffect`, `useRef`, `useMemo`)
 - Adding event listeners (`onClick`, `onChange`, `onSubmit`)
 - Using browser APIs (`window`, `document`, `localStorage`)
-- Using libraries that require browser environment
+- Using libraries that require browser environment (Recharts)
 
 In DivisApp, Client Components are used for:
 
-- **ConversionClient**: Manages form state and calculates results
-- **ConversionForm**: Handles user input with `useState`
+- **HomeIndicators**: Manages favorites state
+- **IndicatorHistory**: Range selection, chart rendering, memoized calculations
+- **ConversionClient**: Form state and calculations
+- **ConversionForm**: User input handling
+- **UI primitives**: Tooltips, favorite buttons, etc.
 
 ### The `'use client'` Directive
 
@@ -431,7 +490,7 @@ When a component needs to be a Client Component, add this at the very top:
 ```tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 export function MyInteractiveComponent() {
   const [value, setValue] = useState('');
@@ -521,8 +580,10 @@ This protects against API changes breaking the application silently.
 1. **Data Source**: All data comes from mindicador.cl public API
 2. **API Client**: `lib/api/mindicador.ts` handles all API communication
 3. **Server Components**: Pages fetch data on the server before rendering
-4. **Client Components**: Handle user interactions (forms, state)
-5. **Caching**: Data is cached for 1 hour to improve performance
-6. **Error Handling**: Network, 404, and validation errors are all handled
+4. **Client Components**: Handle user interactions (forms, favorites, charts)
+5. **Memoization**: Derived data (chart data, analytics) is memoized for performance
+6. **Local Storage**: Favorites and conversion state persist in the browser
+7. **Caching**: Data is cached for 1 hour to improve performance
+8. **Error Handling**: Network, 404, and validation errors are all handled
 
-The key insight is that most data fetching happens on the server, and only interactive features require client-side code. This architecture provides fast initial loads and a smooth user experience.
+The key insight is that most data fetching happens on the server, with Client Components handling interactivity and derived calculations. This architecture provides fast initial loads and a smooth user experience.
