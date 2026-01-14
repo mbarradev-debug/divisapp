@@ -18,7 +18,6 @@ export function HomeIndicators({ indicators }: HomeIndicatorsProps) {
 
   const { favoriteIndicators, recentIndicators, otherIndicators } = useMemo(() => {
     const favoritesSet = new Set(favorites);
-    const recentsSet = new Set(recents);
     const indicatorMap = new Map(indicators.map((ind) => [ind.codigo, ind]));
     const favs: IndicatorValue[] = [];
     const recs: IndicatorValue[] = [];
@@ -41,22 +40,8 @@ export function HomeIndicators({ indicators }: HomeIndicatorsProps) {
       }
     }
 
-    const hasFavorites = favs.length > 0;
-    const hasRecents = recs.length > 0;
-
-    // Build others list based on scenario:
-    // - If favorites exist: exclude favorites from others
-    // - If no favorites but recents exist: exclude recents from others
-    // - If neither: show all in default order
-    let others: IndicatorValue[];
-
-    if (hasFavorites) {
-      others = indicators.filter((ind) => !favoritesSet.has(ind.codigo));
-    } else if (hasRecents) {
-      others = indicators.filter((ind) => !recentsSet.has(ind.codigo));
-    } else {
-      others = [...indicators];
-    }
+    // Build others: exclude only favorites (recents section is informational, not exclusive)
+    const others = indicators.filter((ind) => !favoritesSet.has(ind.codigo));
 
     return { favoriteIndicators: favs, recentIndicators: recs, otherIndicators: others };
   }, [indicators, favorites, recents]);
@@ -66,7 +51,7 @@ export function HomeIndicators({ indicators }: HomeIndicatorsProps) {
 
   return (
     <>
-      {hasFavorites ? (
+      {hasFavorites && (
         <section aria-labelledby="favorites-heading" className="mb-6 pb-6 border-b border-border-subtle">
           <h2
             id="favorites-heading"
@@ -85,7 +70,8 @@ export function HomeIndicators({ indicators }: HomeIndicatorsProps) {
             ))}
           </div>
         </section>
-      ) : hasRecents ? (
+      )}
+      {hasRecents && (
         <section aria-labelledby="recents-heading" className="mb-6 pb-6 border-b border-border-subtle">
           <h2
             id="recents-heading"
@@ -108,7 +94,7 @@ export function HomeIndicators({ indicators }: HomeIndicatorsProps) {
             ))}
           </div>
         </section>
-      ) : null}
+      )}
       <section aria-label="Todos los indicadores" className={hasFavorites || hasRecents ? 'pt-2' : ''}>
         {otherIndicators.length === 0 ? (
           <p className="py-8 text-center text-[length:var(--text-label)] leading-[var(--leading-label)] text-text-muted">
