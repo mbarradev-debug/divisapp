@@ -9,16 +9,14 @@ import {
   ConversionResultSnapshot,
 } from '@/lib/storage';
 
-interface ConversionClientProps {
+interface ConvertClientProps {
   indicators: IndicatorValue[];
 }
 
-export function ConversionClient({ indicators }: ConversionClientProps) {
-  // Use persisted result for immediate rendering on restore
+export function ConvertClient({ indicators }: ConvertClientProps) {
   const { result: conversion, setResult: setConversion } =
     usePersistedConversion();
 
-  // Single conversion function - calculates and persists result
   const handleConvert = useCallback(
     ({
       amount,

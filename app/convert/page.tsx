@@ -1,6 +1,21 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { getAllIndicators, IndicatorValue } from '@/lib/api/mindicador';
-import { ConversionClient } from './conversion-client';
+import { ConvertClient } from './convert-client';
+
+function ConvertFallback() {
+  return (
+    <div className="flex flex-col gap-5 animate-pulse">
+      <div className="h-[72px] rounded-lg bg-bg-muted" />
+      <div className="h-[72px] rounded-lg bg-bg-muted" />
+      <div className="flex justify-center">
+        <div className="h-10 w-10 rounded-full bg-bg-muted" />
+      </div>
+      <div className="h-[72px] rounded-lg bg-bg-muted" />
+      <div className="h-12 rounded-lg bg-bg-muted mt-1" />
+    </div>
+  );
+}
 
 export default async function ConvertPage() {
   let indicators: IndicatorValue[] = [];
@@ -45,7 +60,9 @@ export default async function ConvertPage() {
           <p className="text-[length:var(--text-label)] leading-[var(--leading-label)] text-error-text">{error}</p>
         </div>
       ) : (
-        <ConversionClient indicators={indicators} />
+        <Suspense fallback={<ConvertFallback />}>
+          <ConvertClient indicators={indicators} />
+        </Suspense>
       )}
     </div>
   );
