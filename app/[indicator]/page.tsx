@@ -3,7 +3,12 @@ import { notFound } from 'next/navigation';
 import { getIndicatorByCode, MindicadorApiError } from '@/lib/api/mindicador';
 import { IndicatorHeader } from '@/components/detail/indicator-header';
 import { IndicatorHistory } from '@/components/detail/indicator-history';
+import { IndicatorInsight } from '@/components/detail/indicator-insight';
+import { InsightAnchor } from '@/components/detail/insight-anchor';
 import { RecentTracker } from '@/components/detail/recent-tracker';
+import { hasIndicatorContext, getIndicatorContext } from '@/lib/indicator-context';
+import { deriveTrendSignals } from '@/lib/trend-signals';
+import { composeInsight } from '@/lib/indicator-insight';
 
 interface IndicatorPageProps {
   params: Promise<{
@@ -65,7 +70,18 @@ export default async function IndicatorPage({ params }: IndicatorPageProps) {
         valorActual={data.serie[0]?.valor}
         valorAnterior={data.serie[1]?.valor}
       />
+      {hasIndicatorContext(data.codigo) && data.serie.length >= 2 && (
+        <InsightAnchor />
+      )}
       <IndicatorHistory serie={data.serie} unidadMedida={data.unidad_medida} />
+      {hasIndicatorContext(data.codigo) && data.serie.length >= 2 && (
+        <IndicatorInsight
+          insight={composeInsight({
+            context: getIndicatorContext(data.codigo),
+            signals: deriveTrendSignals(data.serie),
+          })}
+        />
+      )}
     </div>
   );
 }
