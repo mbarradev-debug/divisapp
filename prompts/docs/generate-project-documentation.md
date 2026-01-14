@@ -1,6 +1,6 @@
 # PROMPT NAME: Generate Project Documentation (Versioned)
 
-You are a senior software engineer and technical writer.
+You are a **senior software engineer and technical writer**.
 
 Your task is to generate **complete, versioned project documentation**
 for this repository.
@@ -23,6 +23,21 @@ the **single source of truth** for understanding how the project works.
 
 Each **Git version (tag)** must have its own documentation entry.
 
+The documentation must reflect the **current state of the codebase only**.
+
+---
+
+## Versioning Rules (MANDATORY)
+
+- Documentation must be generated for a **specific target version**.
+- The target version will be explicitly provided by the user.
+- Do NOT guess the version number.
+- Do NOT overwrite documentation for previous versions.
+
+If a documentation file already exists for a version:
+- Create a new file only if the target version does not exist.
+- Never modify older version files.
+
 ---
 
 ## Core Rules (MANDATORY)
@@ -34,6 +49,9 @@ Each **Git version (tag)** must have its own documentation entry.
 - Do NOT reference AI tools, agents, or automation
 - Documentation must read as if written by a human engineer
 - Do NOT omit sections
+- Do NOT include marketing language
+- Do NOT include future roadmap items unless explicitly requested
+- Do NOT document experimental or discarded features
 - This documentation must be understandable without any prior context
 
 ---
@@ -45,11 +63,12 @@ Ensure the following structure exists and is populated:
 docs/
   README.md
   versions/
-    v1.0.0.md
+    vX.Y.Z.md
   architecture/
     overview.md
     folder-structure.md
     data-flow.md
+    ux-decisions.md
   features/
     home.md
     indicator-detail.md
@@ -76,7 +95,7 @@ Explain:
 ---
 
 ### docs/versions/vX.Y.Z.md
-(Create for the **current Git tag**)
+(Create ONLY for the **target version provided by the user**)
 
 Include:
 - Version number
@@ -94,7 +113,7 @@ Explain in simple terms:
 - Why Next.js App Router was chosen
 - What Server Components are (plain explanation)
 - What runs on the server vs the browser
-- How pages are rendered
+- How pages are rendered in this project
 
 ---
 
@@ -121,11 +140,24 @@ Explain step by step:
 
 ---
 
+### docs/architecture/ux-decisions.md
+Explain:
+- Core UX principles of the project
+- Why the app is mobile-first
+- Why conversion recalculates in real time
+- Why favorites are separated from the main list
+- Why some data is intentionally not persisted
+- What UX decisions are intentional vs temporary
+- What trade-offs were made to keep the MVP simple
+
+---
+
 ### docs/features/home.md
 Explain:
 - What the Home page does
 - How indicator data is fetched
 - How components are structured
+- How favorites are handled
 - How to safely modify or extend the Home page
 
 ---
@@ -135,6 +167,7 @@ Explain:
 - How dynamic routes work
 - How indicator detail pages are generated
 - How historical data is fetched
+- How analytics (ranges, trend, min/max) are derived
 - How to add support for new indicators
 
 ---
@@ -144,6 +177,8 @@ Explain:
 - How the conversion feature works
 - What assumptions are made (current values only)
 - How conversion calculations are performed
+- How contextual entry works
+- How real-time recalculation is handled
 - How to extend or modify conversion logic safely
 
 ---
@@ -162,6 +197,7 @@ Explain:
 Explain:
 - Daily development workflow
 - How tasks are implemented
+- How Epics, Tasks, and branches relate
 - When to commit
 - When to push
 - When to merge
@@ -175,6 +211,7 @@ Explain:
 - Commit message conventions
 - Why feature branches are deleted
 - How Jira and Git are connected conceptually
+- The mental model: Epic → Task → Branch → Commit → Merge
 
 ---
 
@@ -184,6 +221,7 @@ Explain:
 - When to bump major, minor, or patch
 - How Git tags are created
 - How documentation versions relate to Git tags
+- How releases are prepared and finalized
 
 ---
 
