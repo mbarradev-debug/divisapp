@@ -7,6 +7,7 @@ import { LineChartBase, ChartDataPoint } from '@/components/ui/line-chart-base';
 import { RangeSelector } from './range-selector';
 import { IndicatorSeriesList } from './indicator-series-list';
 import { TrendIndicator } from './trend-indicator';
+import { Tooltip } from '@/components/ui/tooltip';
 
 type RangeOption = 7 | 30 | 90;
 
@@ -73,19 +74,34 @@ export function IndicatorHistory({ serie, unidadMedida }: IndicatorHistoryProps)
           {delta !== null && <TrendIndicator delta={delta} unit={unidadMedida} />}
           {min !== null && max !== null && (
             <>
-              <div>
-                <span className="text-text-muted">Mín </span>
-                <span className="text-text-secondary">{formatValue(min, unidadMedida)}</span>
-              </div>
-              <div>
-                <span className="text-text-muted">Máx </span>
-                <span className="text-text-secondary">{formatValue(max, unidadMedida)}</span>
-              </div>
+              <Tooltip content="Valor más bajo en el período">
+                <span>
+                  <span className="text-text-muted">Mín </span>
+                  <span className="text-text-secondary">{formatValue(min, unidadMedida)}</span>
+                </span>
+              </Tooltip>
+              <Tooltip content="Valor más alto en el período">
+                <span>
+                  <span className="text-text-muted">Máx </span>
+                  <span className="text-text-secondary">{formatValue(max, unidadMedida)}</span>
+                </span>
+              </Tooltip>
             </>
           )}
         </div>
       ) : null}
-      {chartData.length >= 2 && <LineChartBase data={chartData} />}
+      {chartData.length >= 2 && (
+        <LineChartBase
+          data={chartData}
+          formatValue={(v) => formatValue(v, unidadMedida)}
+          formatDate={(date) =>
+            new Date(date).toLocaleDateString('es-CL', {
+              day: 'numeric',
+              month: 'short',
+            })
+          }
+        />
+      )}
       <IndicatorSeriesList serie={displayedSerie} unidadMedida={unidadMedida} />
     </div>
   );
