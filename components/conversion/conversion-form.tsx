@@ -25,7 +25,7 @@ interface ConversionFormProps {
 
 export function ConversionForm({ indicators, onConvert }: ConversionFormProps) {
   const searchParams = useSearchParams();
-  const { amount, fromCode, toCode, setAmount, setFromCode, setToCode } =
+  const { amount, fromCode, toCode, setAmount, setFromCode, setToCode, swapCodes } =
     usePersistedConversion();
   const [error, setError] = useState<string | null>(null);
   const hasAppliedQueryParam = useRef(false);
@@ -120,8 +120,7 @@ export function ConversionForm({ indicators, onConvert }: ConversionFormProps) {
   };
 
   const handleSwap = () => {
-    setFromCode(toCode);
-    setToCode(fromCode);
+    swapCodes();
     setError(null);
   };
 

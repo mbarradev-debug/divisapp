@@ -116,6 +116,7 @@ interface UsePersistedConversionReturn {
   setFromCode: (value: string) => void;
   setToCode: (value: string) => void;
   setResult: (value: ConversionResultSnapshot | null) => void;
+  swapCodes: () => void;
 }
 
 export function usePersistedConversion(): UsePersistedConversionReturn {
@@ -141,6 +142,16 @@ export function usePersistedConversion(): UsePersistedConversionReturn {
     updateState({ ...current, result: value });
   }, []);
 
+  const swapCodes = useCallback(() => {
+    const current = getSnapshot();
+    if (current.fromCode === current.toCode) return;
+    updateState({
+      ...current,
+      fromCode: current.toCode,
+      toCode: current.fromCode,
+    });
+  }, []);
+
   return {
     amount: state.amount,
     fromCode: state.fromCode,
@@ -150,6 +161,7 @@ export function usePersistedConversion(): UsePersistedConversionReturn {
     setFromCode,
     setToCode,
     setResult,
+    swapCodes,
   };
 }
 
