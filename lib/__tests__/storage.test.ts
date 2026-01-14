@@ -229,3 +229,163 @@ describe('favorites storage logic', () => {
     });
   });
 });
+
+describe('recents storage logic', () => {
+  const MAX_RECENTS = 5;
+
+  describe('addRecent', () => {
+    function addRecent(recents: string[], codigo: string): string[] {
+      const filtered = recents.filter((c) => c !== codigo);
+      return [codigo, ...filtered].slice(0, MAX_RECENTS);
+    }
+
+    it('should add indicator to the beginning of recents', () => {
+      const recents: string[] = [];
+      const result = addRecent(recents, 'uf');
+      expect(result).toEqual(['uf']);
+    });
+
+    it('should move existing indicator to the beginning', () => {
+      const recents = ['uf', 'dolar', 'euro'];
+      const result = addRecent(recents, 'euro');
+      expect(result).toEqual(['euro', 'uf', 'dolar']);
+    });
+
+    it('should not create duplicates', () => {
+      const recents = ['uf', 'dolar'];
+      const result = addRecent(recents, 'uf');
+      expect(result).toEqual(['uf', 'dolar']);
+      expect(result.filter((c) => c === 'uf').length).toBe(1);
+    });
+
+    it('should limit list to MAX_RECENTS', () => {
+      const recents = ['a', 'b', 'c', 'd', 'e'];
+      const result = addRecent(recents, 'f');
+      expect(result).toEqual(['f', 'a', 'b', 'c', 'd']);
+      expect(result.length).toBe(MAX_RECENTS);
+    });
+
+    it('should not exceed MAX_RECENTS when re-adding existing item', () => {
+      const recents = ['a', 'b', 'c', 'd', 'e'];
+      const result = addRecent(recents, 'c');
+      expect(result).toEqual(['c', 'a', 'b', 'd', 'e']);
+      expect(result.length).toBe(MAX_RECENTS);
+    });
+
+    it('should maintain order with sequential adds', () => {
+      let recents: string[] = [];
+      recents = addRecent(recents, 'uf');
+      recents = addRecent(recents, 'dolar');
+      recents = addRecent(recents, 'euro');
+      expect(recents).toEqual(['euro', 'dolar', 'uf']);
+    });
+  });
+
+  describe('validateRecents', () => {
+    function validateRecents(stored: unknown): string[] {
+      if (!Array.isArray(stored)) return [];
+      if (!stored.every((item) => typeof item === 'string')) return [];
+      return stored.slice(0, MAX_RECENTS);
+    }
+
+    it('should return empty array for non-array value', () => {
+      expect(validateRecents({ not: 'an array' })).toEqual([]);
+      expect(validateRecents('string')).toEqual([]);
+      expect(validateRecents(123)).toEqual([]);
+      expect(validateRecents(null)).toEqual([]);
+      expect(validateRecents(undefined)).toEqual([]);
+    });
+
+    it('should return empty array for array with non-strings', () => {
+      expect(validateRecents([1, 2, 3])).toEqual([]);
+      expect(validateRecents([{}, {}])).toEqual([]);
+      expect(validateRecents(['uf', 123])).toEqual([]);
+    });
+
+    it('should return valid string array unchanged', () => {
+      expect(validateRecents(['uf', 'dolar'])).toEqual(['uf', 'dolar']);
+      expect(validateRecents([])).toEqual([]);
+    });
+
+    it('should truncate to MAX_RECENTS', () => {
+      const tooMany = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
+      expect(validateRecents(tooMany)).toEqual(['a', 'b', 'c', 'd', 'e']);
+    });
+  });
+
+  describe('recents and favorites separation', () => {
+    interface Indicator {
+      codigo: string;
+      nombre: string;
+    }
+
+    function separateIndicators(
+      indicators: Indicator[],
+      favorites: string[],
+      recents: string[]
+    ): { favoriteIndicators: Indicator[]; recentIndicators: Indicator[]; otherIndicators: Indicator[] } {
+      const favoritesSet = new Set(favorites);
+      const indicatorMap = new Map(indicators.map((ind) => [ind.codigo, ind]));
+      const favs: Indicator[] = [];
+      const recs: Indicator[] = [];
+      const others: Indicator[] = [];
+
+      for (const codigo of favorites) {
+        const indicator = indicatorMap.get(codigo);
+        if (indicator) {
+          favs.push(indicator);
+        }
+      }
+
+      for (const codigo of recents) {
+        if (!favoritesSet.has(codigo)) {
+          const indicator = indicatorMap.get(codigo);
+          if (indicator) {
+            recs.push(indicator);
+          }
+        }
+      }
+
+      for (const indicator of indicators) {
+        if (!favoritesSet.has(indicator.codigo)) {
+          others.push(indicator);
+        }
+      }
+
+      return { favoriteIndicators: favs, recentIndicators: recs, otherIndicators: others };
+    }
+
+    const mockIndicators: Indicator[] = [
+      { codigo: 'uf', nombre: 'UF' },
+      { codigo: 'dolar', nombre: 'Dólar' },
+      { codigo: 'euro', nombre: 'Euro' },
+      { codigo: 'utm', nombre: 'UTM' },
+    ];
+
+    it('should show recents when no favorites', () => {
+      const result = separateIndicators(mockIndicators, [], ['dolar', 'euro']);
+      expect(result.recentIndicators.map((i) => i.codigo)).toEqual(['dolar', 'euro']);
+    });
+
+    it('should exclude favorites from recents', () => {
+      const result = separateIndicators(mockIndicators, ['dolar'], ['dolar', 'euro', 'utm']);
+      expect(result.recentIndicators.map((i) => i.codigo)).toEqual(['euro', 'utm']);
+      expect(result.favoriteIndicators.map((i) => i.codigo)).toEqual(['dolar']);
+    });
+
+    it('should return empty recents when all recents are favorites', () => {
+      const result = separateIndicators(mockIndicators, ['dolar', 'euro'], ['dolar', 'euro']);
+      expect(result.recentIndicators).toEqual([]);
+    });
+
+    it('should preserve recents order', () => {
+      const result = separateIndicators(mockIndicators, [], ['utm', 'uf', 'dolar']);
+      expect(result.recentIndicators.map((i) => i.codigo)).toEqual(['utm', 'uf', 'dolar']);
+    });
+
+    it('should ignore recents not in indicators list', () => {
+      const result = separateIndicators(mockIndicators, [], ['dolar', 'bitcoin', 'euro']);
+      expect(result.recentIndicators.map((i) => i.codigo)).toEqual(['dolar', 'euro']);
+    });
+  });
+});

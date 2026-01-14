@@ -1,8 +1,10 @@
 'use client';
 
 import { useMemo } from 'react';
+import Link from 'next/link';
 import { IndicatorValue } from '@/lib/api/mindicador';
-import { useFavorites } from '@/lib/storage';
+import { useFavorites, useRecentIndicators } from '@/lib/storage';
+import { formatValue } from '@/lib/format';
 import { IndicatorItem } from './indicator-item';
 import { FavoriteIndicatorItem } from './favorite-indicator-item';
 
@@ -12,14 +14,13 @@ interface HomeIndicatorsProps {
 
 export function HomeIndicators({ indicators }: HomeIndicatorsProps) {
   const { favorites } = useFavorites();
+  const { recents } = useRecentIndicators();
 
-  const { favoriteIndicators, otherIndicators } = useMemo(() => {
-    if (favorites.length === 0) {
-      return { favoriteIndicators: [], otherIndicators: indicators };
-    }
+  const { favoriteIndicators, recentIndicators, otherIndicators } = useMemo(() => {
     const favoritesSet = new Set(favorites);
     const indicatorMap = new Map(indicators.map((ind) => [ind.codigo, ind]));
     const favs: IndicatorValue[] = [];
+    const recs: IndicatorValue[] = [];
     const others: IndicatorValue[] = [];
 
     // Build favorites in the order they appear in the favorites array
@@ -30,6 +31,16 @@ export function HomeIndicators({ indicators }: HomeIndicatorsProps) {
       }
     }
 
+    // Build recents excluding favorites
+    for (const codigo of recents) {
+      if (!favoritesSet.has(codigo)) {
+        const indicator = indicatorMap.get(codigo);
+        if (indicator) {
+          recs.push(indicator);
+        }
+      }
+    }
+
     // Build others from remaining indicators
     for (const indicator of indicators) {
       if (!favoritesSet.has(indicator.codigo)) {
@@ -37,8 +48,8 @@ export function HomeIndicators({ indicators }: HomeIndicatorsProps) {
       }
     }
 
-    return { favoriteIndicators: favs, otherIndicators: others };
-  }, [indicators, favorites]);
+    return { favoriteIndicators: favs, recentIndicators: recs, otherIndicators: others };
+  }, [indicators, favorites, recents]);
 
   return (
     <>
@@ -86,6 +97,30 @@ export function HomeIndicators({ indicators }: HomeIndicatorsProps) {
           </div>
         )}
       </section>
+      {recentIndicators.length > 0 && (
+        <section aria-labelledby="recents-heading" className="mb-6 pb-6 border-b border-border-subtle">
+          <h2
+            id="recents-heading"
+            className="mb-3 text-[length:var(--text-label)] font-medium leading-[var(--leading-label)] text-text-muted"
+          >
+            Vistos recientemente
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {recentIndicators.map((indicator) => (
+              <Link
+                key={indicator.codigo}
+                href={`/${indicator.codigo}`}
+                className="inline-flex items-center gap-2 rounded-full border border-border-subtle bg-bg-subtle px-3 py-1.5 text-[length:var(--text-small)] leading-[var(--leading-small)] hover:border-border hover:bg-bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset"
+              >
+                <span className="text-text-secondary">{indicator.nombre}</span>
+                <span className="font-medium tabular-nums text-text">
+                  {formatValue(indicator.valor, indicator.unidad_medida)}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
       <section aria-label="Todos los indicadores" className="pt-2">
         {otherIndicators.length === 0 ? (
           <p className="py-8 text-center text-[length:var(--text-label)] leading-[var(--leading-label)] text-text-muted">

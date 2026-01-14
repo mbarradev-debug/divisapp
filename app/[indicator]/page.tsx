@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { getIndicatorByCode, MindicadorApiError } from '@/lib/api/mindicador';
 import { IndicatorHeader } from '@/components/detail/indicator-header';
 import { IndicatorHistory } from '@/components/detail/indicator-history';
+import { RecentTracker } from '@/components/detail/recent-tracker';
 
 interface IndicatorPageProps {
   params: Promise<{
@@ -37,6 +38,7 @@ export default async function IndicatorPage({ params }: IndicatorPageProps) {
 
   return (
     <div>
+      <RecentTracker codigo={data.codigo} />
       <Link
         href="/"
         className="mb-4 inline-flex items-center gap-1 text-[length:var(--text-label)] leading-[var(--leading-label)] text-text-secondary hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset"

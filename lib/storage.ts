@@ -2,6 +2,8 @@ import { useSyncExternalStore, useCallback } from 'react';
 
 const CONVERSION_STORAGE_KEY = 'divisapp_last_conversion';
 const FAVORITES_STORAGE_KEY = 'divisapp_favorites';
+const RECENTS_STORAGE_KEY = 'divisapp_recents';
+const MAX_RECENTS = 5;
 
 export interface ConversionResultSnapshot {
   amount: number;
@@ -272,5 +274,92 @@ export function useFavorites(): UseFavoritesReturn {
     isFavorite,
     toggleFavorite,
     moveFavorite,
+  };
+}
+
+// Recent indicators storage
+
+type RecentsState = string[];
+
+function getStoredRecents(): RecentsState {
+  if (typeof window === 'undefined') return [];
+
+  try {
+    const stored = localStorage.getItem(RECENTS_STORAGE_KEY);
+    if (!stored) return [];
+
+    const parsed = JSON.parse(stored);
+
+    if (Array.isArray(parsed) && parsed.every((item) => typeof item === 'string')) {
+      return parsed.slice(0, MAX_RECENTS);
+    }
+
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+function setStoredRecents(recents: RecentsState): void {
+  if (typeof window === 'undefined') return;
+
+  try {
+    localStorage.setItem(RECENTS_STORAGE_KEY, JSON.stringify(recents));
+  } catch {
+    // Silently fail if localStorage is unavailable
+  }
+}
+
+let recentsListeners: Array<() => void> = [];
+let cachedRecents: RecentsState | null = null;
+
+function subscribeRecents(listener: () => void): () => void {
+  recentsListeners = [...recentsListeners, listener];
+  return () => {
+    recentsListeners = recentsListeners.filter((l) => l !== listener);
+  };
+}
+
+function getRecentsSnapshot(): RecentsState {
+  if (cachedRecents === null) {
+    cachedRecents = getStoredRecents();
+  }
+  return cachedRecents;
+}
+
+const emptyRecents: RecentsState = [];
+
+function getRecentsServerSnapshot(): RecentsState {
+  return emptyRecents;
+}
+
+function updateRecents(newRecents: RecentsState): void {
+  cachedRecents = newRecents;
+  setStoredRecents(newRecents);
+  recentsListeners.forEach((listener) => listener());
+}
+
+interface UseRecentIndicatorsReturn {
+  recents: RecentsState;
+  addRecent: (codigo: string) => void;
+}
+
+export function useRecentIndicators(): UseRecentIndicatorsReturn {
+  const recents = useSyncExternalStore(
+    subscribeRecents,
+    getRecentsSnapshot,
+    getRecentsServerSnapshot
+  );
+
+  const addRecent = useCallback((codigo: string) => {
+    const current = getRecentsSnapshot();
+    const filtered = current.filter((c) => c !== codigo);
+    const newRecents = [codigo, ...filtered].slice(0, MAX_RECENTS);
+    updateRecents(newRecents);
+  }, []);
+
+  return {
+    recents,
+    addRecent,
   };
 }
