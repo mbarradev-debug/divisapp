@@ -239,7 +239,6 @@ interface UseFavoritesReturn {
   favorites: FavoritesState;
   isFavorite: (codigo: string) => boolean;
   toggleFavorite: (codigo: string) => void;
-  moveFavorite: (codigo: string, direction: 'up' | 'down') => void;
   reorderFavorites: (fromIndex: number, toIndex: number) => void;
 }
 
@@ -263,19 +262,6 @@ export function useFavorites(): UseFavoritesReturn {
     updateFavorites(newFavorites);
   }, []);
 
-  const moveFavorite = useCallback((codigo: string, direction: 'up' | 'down') => {
-    const current = getFavoritesSnapshot();
-    const index = current.indexOf(codigo);
-    if (index === -1) return;
-
-    const newIndex = direction === 'up' ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= current.length) return;
-
-    const newFavorites = [...current];
-    [newFavorites[index], newFavorites[newIndex]] = [newFavorites[newIndex], newFavorites[index]];
-    updateFavorites(newFavorites);
-  }, []);
-
   const reorderFavorites = useCallback((fromIndex: number, toIndex: number) => {
     const current = getFavoritesSnapshot();
     if (fromIndex < 0 || fromIndex >= current.length) return;
@@ -292,7 +278,6 @@ export function useFavorites(): UseFavoritesReturn {
     favorites,
     isFavorite,
     toggleFavorite,
-    moveFavorite,
     reorderFavorites,
   };
 }

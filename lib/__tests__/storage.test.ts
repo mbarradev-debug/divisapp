@@ -43,67 +43,6 @@ describe('favorites storage logic', () => {
     });
   });
 
-  describe('moveFavorite', () => {
-    function moveFavorite(favorites: string[], codigo: string, direction: 'up' | 'down'): string[] {
-      const index = favorites.indexOf(codigo);
-      if (index === -1) return favorites;
-
-      const newIndex = direction === 'up' ? index - 1 : index + 1;
-      if (newIndex < 0 || newIndex >= favorites.length) return favorites;
-
-      const newFavorites = [...favorites];
-      [newFavorites[index], newFavorites[newIndex]] = [newFavorites[newIndex], newFavorites[index]];
-      return newFavorites;
-    }
-
-    it('should move favorite up in the list', () => {
-      const favorites = ['uf', 'dolar', 'euro'];
-      const result = moveFavorite(favorites, 'dolar', 'up');
-      expect(result).toEqual(['dolar', 'uf', 'euro']);
-    });
-
-    it('should move favorite down in the list', () => {
-      const favorites = ['uf', 'dolar', 'euro'];
-      const result = moveFavorite(favorites, 'dolar', 'down');
-      expect(result).toEqual(['uf', 'euro', 'dolar']);
-    });
-
-    it('should not move first item up (boundary)', () => {
-      const favorites = ['uf', 'dolar'];
-      const result = moveFavorite(favorites, 'uf', 'up');
-      expect(result).toEqual(['uf', 'dolar']);
-    });
-
-    it('should not move last item down (boundary)', () => {
-      const favorites = ['uf', 'dolar'];
-      const result = moveFavorite(favorites, 'dolar', 'down');
-      expect(result).toEqual(['uf', 'dolar']);
-    });
-
-    it('should not move non-existent indicator', () => {
-      const favorites = ['uf', 'dolar'];
-      const result = moveFavorite(favorites, 'euro', 'up');
-      expect(result).toEqual(['uf', 'dolar']);
-    });
-
-    it('should swap adjacent items correctly with multiple moves', () => {
-      const favorites = ['a', 'b', 'c', 'd'];
-      let result = moveFavorite(favorites, 'c', 'up');
-      expect(result).toEqual(['a', 'c', 'b', 'd']);
-
-      result = moveFavorite(result, 'c', 'up');
-      expect(result).toEqual(['c', 'a', 'b', 'd']);
-    });
-
-    it('should move item to last position', () => {
-      let favorites = ['uf', 'dolar', 'euro'];
-      favorites = moveFavorite(favorites, 'uf', 'down');
-      expect(favorites).toEqual(['dolar', 'uf', 'euro']);
-      favorites = moveFavorite(favorites, 'uf', 'down');
-      expect(favorites).toEqual(['dolar', 'euro', 'uf']);
-    });
-  });
-
   describe('reorderFavorites', () => {
     function reorderFavorites(favorites: string[], fromIndex: number, toIndex: number): string[] {
       if (fromIndex < 0 || fromIndex >= favorites.length) return favorites;
