@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { IndicatorValue } from '@/lib/api/mindicador';
 import { useFavorites, useRecentIndicators } from '@/lib/storage';
@@ -17,8 +17,10 @@ export function HomeIndicators({ indicators }: HomeIndicatorsProps) {
   const { recents } = useRecentIndicators();
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const dragIndexRef = useRef<number | null>(null);
 
   const handleDragStart = useCallback((index: number) => {
+    dragIndexRef.current = index;
     setDragIndex(index);
   }, []);
 
@@ -28,19 +30,58 @@ export function HomeIndicators({ indicators }: HomeIndicatorsProps) {
   }, []);
 
   const handleDragEnd = useCallback(() => {
+    dragIndexRef.current = null;
     setDragIndex(null);
     setDragOverIndex(null);
   }, []);
 
   const handleDrop = useCallback(
     (toIndex: number) => {
-      if (dragIndex !== null && dragIndex !== toIndex) {
-        reorderFavorites(dragIndex, toIndex);
+      const fromIndex = dragIndexRef.current;
+      if (fromIndex !== null && fromIndex !== toIndex) {
+        reorderFavorites(fromIndex, toIndex);
       }
+      dragIndexRef.current = null;
       setDragIndex(null);
       setDragOverIndex(null);
     },
-    [dragIndex, reorderFavorites]
+    [reorderFavorites]
+  );
+
+  const handleTouchStart = useCallback((index: number) => {
+    dragIndexRef.current = index;
+    setDragIndex(index);
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    const target = element?.closest('[data-favorite-index]');
+    if (target) {
+      const idx = parseInt(target.getAttribute('data-favorite-index') || '', 10);
+      if (!isNaN(idx) && idx !== dragIndexRef.current) {
+        setDragOverIndex(idx);
+      }
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      const touch = e.changedTouches[0];
+      const element = document.elementFromPoint(touch.clientX, touch.clientY);
+      const target = element?.closest('[data-favorite-index]');
+      if (target) {
+        const toIndex = parseInt(target.getAttribute('data-favorite-index') || '', 10);
+        const fromIndex = dragIndexRef.current;
+        if (!isNaN(toIndex) && fromIndex !== null && fromIndex !== toIndex) {
+          reorderFavorites(fromIndex, toIndex);
+        }
+      }
+      dragIndexRef.current = null;
+      setDragIndex(null);
+      setDragOverIndex(null);
+    },
+    [reorderFavorites]
   );
 
   const { favoriteIndicators, recentIndicators, otherIndicators } = useMemo(() => {
@@ -118,11 +159,13 @@ export function HomeIndicators({ indicators }: HomeIndicatorsProps) {
                 key={indicator.codigo}
                 indicator={indicator}
                 index={index}
-                totalCount={favoriteIndicators.length}
                 onDragStart={handleDragStart}
                 onDragOver={handleDragOver}
                 onDragEnd={handleDragEnd}
                 onDrop={handleDrop}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
                 isDragging={dragIndex === index}
                 isDragOver={dragOverIndex === index && dragIndex !== index}
               />
