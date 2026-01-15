@@ -113,7 +113,6 @@ divisapp/
 │       ├── favorite-button.tsx   # Heart toggle
 │       ├── line-chart-base.tsx   # Recharts wrapper
 │       ├── tooltip.tsx           # Hover tooltips
-│       ├── reorder-controls.tsx  # Up/down arrows
 │       └── index.ts              # Barrel exports
 ├── lib/
 │   ├── api/
@@ -248,7 +247,6 @@ interface IndicatorDetailResponse {
 | `FavoriteButton` | Heart icon toggle |
 | `LineChartBase` | Recharts wrapper with formatting |
 | `Tooltip` | Hover/focus tooltips |
-| `ReorderControls` | Up/down arrows for ordering |
 
 ---
 
@@ -313,7 +311,7 @@ const {
   favorites,        // string[] - ordered codes
   isFavorite,       // (codigo: string) => boolean
   toggleFavorite,   // (codigo: string) => void
-  moveFavorite      // (codigo: string, direction: 'up'|'down') => void
+  reorderFavorites  // (fromIndex: number, toIndex: number) => void
 } = useFavorites();
 ```
 
@@ -491,6 +489,7 @@ Optional body explaining why the change was made.
 |---------|-------------|
 | 1.0.0 | Initial release with indicators, conversion, detail pages |
 | 1.1.0 | Favorites system, charts, analytics, smart defaults |
+| 1.4.0 | Drag and drop reordering for favorites |
 
 ---
 

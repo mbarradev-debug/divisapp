@@ -32,8 +32,7 @@ divisapp/
 │   ├── home/                     # Home page components
 │   │   ├── favorite-indicator-item.tsx
 │   │   ├── home-indicators.tsx
-│   │   ├── indicator-item.tsx
-│   │   └── indicators-list.tsx
+│   │   └── indicator-item.tsx
 │   ├── navigation/               # Navigation components
 │   │   └── convert-link.tsx
 │   └── ui/                       # Reusable UI primitives
@@ -43,7 +42,6 @@ divisapp/
 │       ├── favorite-button.tsx
 │       ├── input.tsx
 │       ├── line-chart-base.tsx
-│       ├── reorder-controls.tsx
 │       ├── select.tsx
 │       └── tooltip.tsx
 │
@@ -141,7 +139,6 @@ The `ui/` folder contains reusable, generic components that are not tied to any 
 | `tooltip.tsx` | Hover/focus tooltips |
 | `favorite-button.tsx` | Heart icon toggle |
 | `line-chart-base.tsx` | Recharts line chart wrapper |
-| `reorder-controls.tsx` | Up/down arrow buttons |
 | `index.ts` | Barrel file for easy imports |
 
 Import from `ui/` using the barrel export:
@@ -227,7 +224,7 @@ Contains localStorage-backed React hooks:
 import { useFavorites, usePersistedConversion } from '@/lib/storage';
 
 // Favorites management
-const { favorites, isFavorite, toggleFavorite, moveFavorite } = useFavorites();
+const { favorites, isFavorite, toggleFavorite, reorderFavorites } = useFavorites();
 
 // Conversion state persistence
 const { conversion, setConversion } = usePersistedConversion();

@@ -105,6 +105,44 @@ const otherIndicators = indicators
   .filter(i => !favorites.includes(i.codigo));
 ```
 
+## Why Favorites Use Drag and Drop Instead of Buttons
+
+### The Decision
+
+Favorites can be reordered using drag and drop gestures. This replaced the previous up/down arrow buttons.
+
+### The Reasoning
+
+1. **Natural interaction**: Drag and drop is a more intuitive gesture for reordering
+2. **Faster for large reorders**: Moving an item from position 1 to position 5 requires one drag instead of four button clicks
+3. **Touch-friendly**: Drag gestures work naturally on mobile devices
+4. **Less visual clutter**: Removing arrow buttons from each card simplifies the interface
+
+### The Trade-offs Accepted
+
+- **Less discoverable**: New users may not immediately know items can be dragged
+- **Accessibility concerns**: Users who cannot drag may have difficulty reordering
+- **No keyboard support**: Cannot reorder using keyboard alone (accepted for MVP)
+
+### The Implementation
+
+Desktop uses the native HTML5 Drag and Drop API. Mobile uses touch events with element detection via `document.elementFromPoint()`:
+
+```tsx
+// Track finger position and find element under touch
+const handleTouchMove = useCallback((e: React.TouchEvent) => {
+  const touch = e.touches[0];
+  const element = document.elementFromPoint(touch.clientX, touch.clientY);
+  const target = element?.closest('[data-favorite-index]');
+  // ...
+}, []);
+```
+
+Visual feedback during drag:
+- Dragged item elevates with shadow and slight scale increase
+- Drop target highlights with border and background change
+- Brief settling animation after drop completes
+
 ## Why Some Data Is Intentionally Not Persisted
 
 ### What's Persisted
@@ -213,6 +251,7 @@ On touch devices, tooltips appear on tap (via focus). This is slightly less disc
 |----------|--------|
 | Mobile-first layout | Core design principle |
 | Favorites at top | Proven useful in testing |
+| Drag and drop reordering | Natural, touch-friendly interaction |
 | Real-time conversion | Better user experience |
 | Simple range selector | Matches API capabilities |
 | Local-only storage | No backend needed for MVP |

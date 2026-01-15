@@ -70,7 +70,8 @@ The documentation is organized into several sections:
 
 ### Version History
 
-- **[v1.1.0](versions/v1.1.0.md)**: Current version (favorites, charts, smart conversion)
+- **[v1.4.0](versions/v1.4.0.md)**: Current version (drag and drop reordering)
+- **[v1.1.0](versions/v1.1.0.md)**: Favorites, charts, smart conversion
 - **[v1.0.0](versions/v1.0.0.md)**: Initial release
 
 ## How Documentation Evolves
@@ -91,6 +92,6 @@ When you update the code significantly, create a new version document. Previous 
 | Understand how the app works | [Architecture Overview](architecture/overview.md) |
 | Add a new feature | [Folder Structure](architecture/folder-structure.md) |
 | Understand data flow | [Data Flow](architecture/data-flow.md) |
-| See what version 1.1.0 includes | [v1.1.0](versions/v1.1.0.md) |
+| See what version 1.4.0 includes | [v1.4.0](versions/v1.4.0.md) |
 | Learn Git conventions | [Branching and Commits](development/branching-and-commits.md) |
 | Understand UX choices | [UX Decisions](architecture/ux-decisions.md) |

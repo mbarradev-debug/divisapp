@@ -155,20 +155,20 @@ The `Home` function is `async`, so it can `await` the API call. This happens on 
 
 ### Step 4: Data Processing
 
-The `HomeIndicators` component splits indicators into favorites and others:
+The `HomeIndicators` component splits indicators into favorites, recents, and others:
 
 ```tsx
 // components/home/home-indicators.tsx
 export function HomeIndicators({ indicators }) {
-  const { favorites, isFavorite, toggleFavorite, moveFavorite } = useFavorites();
+  const { favorites, reorderFavorites } = useFavorites();
+  const { recents } = useRecentIndicators();
 
-  // Split into favorites and non-favorites
-  const favoriteIndicators = favorites
-    .map(code => indicatorValues.find(i => i.codigo === code))
-    .filter(Boolean);
-
-  const otherIndicators = indicatorValues
-    .filter(i => !favorites.includes(i.codigo));
+  // Split into favorites, recents, and others
+  const { favoriteIndicators, recentIndicators, otherIndicators } = useMemo(() => {
+    const favoritesSet = new Set(favorites);
+    const indicatorMap = new Map(indicators.map((ind) => [ind.codigo, ind]));
+    // ... separation logic
+  }, [indicators, favorites, recents]);
 
   // ...
 }
