@@ -49,9 +49,32 @@ export function HomeIndicators({ indicators }: HomeIndicatorsProps) {
   const hasFavorites = favoriteIndicators.length > 0;
   const hasRecents = recentIndicators.length > 0;
 
+  const notificationLink = (
+    <Link
+      href="/notifications"
+      className="inline-flex items-center gap-1.5 text-[length:var(--text-small)] leading-[var(--leading-small)] text-text-secondary hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset"
+    >
+      <svg
+        className="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+        />
+      </svg>
+      Configurar alertas
+    </Link>
+  );
+
   return (
     <>
-      {hasFavorites && (
+      {hasFavorites ? (
         <section aria-labelledby="favorites-heading" className="mb-6 pb-6 border-b border-border-subtle">
           <div className="mb-4 flex items-center justify-between">
             <h2
@@ -60,26 +83,7 @@ export function HomeIndicators({ indicators }: HomeIndicatorsProps) {
             >
               Favoritos
             </h2>
-            <Link
-              href="/notifications"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border-subtle px-2.5 py-1.5 text-[length:var(--text-small)] leading-[var(--leading-small)] text-text-secondary hover:border-border hover:bg-bg-muted hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset"
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                />
-              </svg>
-              Notificaciones
-            </Link>
+            {notificationLink}
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             {favoriteIndicators.map((indicator, index) => (
@@ -92,6 +96,10 @@ export function HomeIndicators({ indicators }: HomeIndicatorsProps) {
             ))}
           </div>
         </section>
+      ) : (
+        <div className="mb-6 flex items-center justify-end">
+          {notificationLink}
+        </div>
       )}
       {hasRecents && (
         <section aria-labelledby="recents-heading" className="mb-6 pb-6 border-b border-border-subtle">
