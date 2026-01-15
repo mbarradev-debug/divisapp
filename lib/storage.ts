@@ -369,3 +369,191 @@ export function useRecentIndicators(): UseRecentIndicatorsReturn {
     addRecent,
   };
 }
+
+// Notification preferences storage
+
+const NOTIFICATION_STORAGE_KEY = 'divisapp_notification_preferences';
+
+export interface NotificationPreferences {
+  enabled: boolean;
+  indicators: string[];
+  triggerType: 'daily' | 'threshold' | 'significant';
+  thresholds: Record<string, { type: 'above' | 'below'; value: number }>;
+  sensitivity: 0.5 | 1 | 2 | 5;
+  quietHours: {
+    enabled: boolean;
+    start: string;
+    end: string;
+  };
+  maxDaily: 1 | 2 | 3 | 5 | null;
+}
+
+const defaultNotificationPreferences: NotificationPreferences = {
+  enabled: false,
+  indicators: [],
+  triggerType: 'daily',
+  thresholds: {},
+  sensitivity: 1,
+  quietHours: {
+    enabled: false,
+    start: '22:00',
+    end: '08:00',
+  },
+  maxDaily: 3,
+};
+
+function getStoredNotificationPreferences(): NotificationPreferences {
+  if (typeof window === 'undefined') return defaultNotificationPreferences;
+
+  try {
+    const stored = localStorage.getItem(NOTIFICATION_STORAGE_KEY);
+    if (!stored) return defaultNotificationPreferences;
+
+    const parsed = JSON.parse(stored);
+
+    if (
+      typeof parsed === 'object' &&
+      parsed !== null &&
+      typeof parsed.enabled === 'boolean' &&
+      Array.isArray(parsed.indicators) &&
+      ['daily', 'threshold', 'significant'].includes(parsed.triggerType) &&
+      typeof parsed.thresholds === 'object' &&
+      [0.5, 1, 2, 5].includes(parsed.sensitivity) &&
+      typeof parsed.quietHours === 'object' &&
+      typeof parsed.quietHours.enabled === 'boolean' &&
+      typeof parsed.quietHours.start === 'string' &&
+      typeof parsed.quietHours.end === 'string' &&
+      (parsed.maxDaily === null || [1, 2, 3, 5].includes(parsed.maxDaily))
+    ) {
+      return parsed as NotificationPreferences;
+    }
+
+    return defaultNotificationPreferences;
+  } catch {
+    return defaultNotificationPreferences;
+  }
+}
+
+function setStoredNotificationPreferences(prefs: NotificationPreferences): void {
+  if (typeof window === 'undefined') return;
+
+  try {
+    localStorage.setItem(NOTIFICATION_STORAGE_KEY, JSON.stringify(prefs));
+  } catch {
+    // Silently fail if localStorage is unavailable
+  }
+}
+
+let notificationListeners: Array<() => void> = [];
+let cachedNotificationPreferences: NotificationPreferences | null = null;
+
+function subscribeNotifications(listener: () => void): () => void {
+  notificationListeners = [...notificationListeners, listener];
+  return () => {
+    notificationListeners = notificationListeners.filter((l) => l !== listener);
+  };
+}
+
+function getNotificationPreferencesSnapshot(): NotificationPreferences {
+  if (cachedNotificationPreferences === null) {
+    cachedNotificationPreferences = getStoredNotificationPreferences();
+  }
+  return cachedNotificationPreferences;
+}
+
+function getNotificationPreferencesServerSnapshot(): NotificationPreferences {
+  return defaultNotificationPreferences;
+}
+
+function updateNotificationPreferences(newPrefs: NotificationPreferences): void {
+  cachedNotificationPreferences = newPrefs;
+  setStoredNotificationPreferences(newPrefs);
+  notificationListeners.forEach((listener) => listener());
+}
+
+interface UseNotificationPreferencesReturn {
+  preferences: NotificationPreferences;
+  setEnabled: (enabled: boolean) => void;
+  setIndicators: (indicators: string[]) => void;
+  toggleIndicator: (codigo: string) => void;
+  setTriggerType: (type: 'daily' | 'threshold' | 'significant') => void;
+  setThreshold: (codigo: string, threshold: { type: 'above' | 'below'; value: number } | null) => void;
+  setSensitivity: (value: 0.5 | 1 | 2 | 5) => void;
+  setQuietHours: (quietHours: { enabled: boolean; start: string; end: string }) => void;
+  setMaxDaily: (value: 1 | 2 | 3 | 5 | null) => void;
+}
+
+export function useNotificationPreferences(): UseNotificationPreferencesReturn {
+  const preferences = useSyncExternalStore(
+    subscribeNotifications,
+    getNotificationPreferencesSnapshot,
+    getNotificationPreferencesServerSnapshot
+  );
+
+  const setEnabled = useCallback((enabled: boolean) => {
+    const current = getNotificationPreferencesSnapshot();
+    updateNotificationPreferences({ ...current, enabled });
+  }, []);
+
+  const setIndicators = useCallback((indicators: string[]) => {
+    const current = getNotificationPreferencesSnapshot();
+    updateNotificationPreferences({ ...current, indicators });
+  }, []);
+
+  const toggleIndicator = useCallback((codigo: string) => {
+    const current = getNotificationPreferencesSnapshot();
+    const newIndicators = current.indicators.includes(codigo)
+      ? current.indicators.filter((c) => c !== codigo)
+      : [...current.indicators, codigo];
+    updateNotificationPreferences({ ...current, indicators: newIndicators });
+  }, []);
+
+  const setTriggerType = useCallback((triggerType: 'daily' | 'threshold' | 'significant') => {
+    const current = getNotificationPreferencesSnapshot();
+    updateNotificationPreferences({ ...current, triggerType });
+  }, []);
+
+  const setThreshold = useCallback(
+    (codigo: string, threshold: { type: 'above' | 'below'; value: number } | null) => {
+      const current = getNotificationPreferencesSnapshot();
+      const newThresholds = { ...current.thresholds };
+      if (threshold === null) {
+        delete newThresholds[codigo];
+      } else {
+        newThresholds[codigo] = threshold;
+      }
+      updateNotificationPreferences({ ...current, thresholds: newThresholds });
+    },
+    []
+  );
+
+  const setSensitivity = useCallback((sensitivity: 0.5 | 1 | 2 | 5) => {
+    const current = getNotificationPreferencesSnapshot();
+    updateNotificationPreferences({ ...current, sensitivity });
+  }, []);
+
+  const setQuietHours = useCallback(
+    (quietHours: { enabled: boolean; start: string; end: string }) => {
+      const current = getNotificationPreferencesSnapshot();
+      updateNotificationPreferences({ ...current, quietHours });
+    },
+    []
+  );
+
+  const setMaxDaily = useCallback((maxDaily: 1 | 2 | 3 | 5 | null) => {
+    const current = getNotificationPreferencesSnapshot();
+    updateNotificationPreferences({ ...current, maxDaily });
+  }, []);
+
+  return {
+    preferences,
+    setEnabled,
+    setIndicators,
+    toggleIndicator,
+    setTriggerType,
+    setThreshold,
+    setSensitivity,
+    setQuietHours,
+    setMaxDaily,
+  };
+}
