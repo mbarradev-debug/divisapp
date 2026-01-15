@@ -240,6 +240,7 @@ interface UseFavoritesReturn {
   isFavorite: (codigo: string) => boolean;
   toggleFavorite: (codigo: string) => void;
   moveFavorite: (codigo: string, direction: 'up' | 'down') => void;
+  reorderFavorites: (fromIndex: number, toIndex: number) => void;
 }
 
 export function useFavorites(): UseFavoritesReturn {
@@ -275,11 +276,24 @@ export function useFavorites(): UseFavoritesReturn {
     updateFavorites(newFavorites);
   }, []);
 
+  const reorderFavorites = useCallback((fromIndex: number, toIndex: number) => {
+    const current = getFavoritesSnapshot();
+    if (fromIndex < 0 || fromIndex >= current.length) return;
+    if (toIndex < 0 || toIndex >= current.length) return;
+    if (fromIndex === toIndex) return;
+
+    const newFavorites = [...current];
+    const [removed] = newFavorites.splice(fromIndex, 1);
+    newFavorites.splice(toIndex, 0, removed);
+    updateFavorites(newFavorites);
+  }, []);
+
   return {
     favorites,
     isFavorite,
     toggleFavorite,
     moveFavorite,
+    reorderFavorites,
   };
 }
 

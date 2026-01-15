@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { IndicatorValue } from '@/lib/api/mindicador';
 import { useFavorites, useRecentIndicators } from '@/lib/storage';
@@ -13,8 +13,35 @@ interface HomeIndicatorsProps {
 }
 
 export function HomeIndicators({ indicators }: HomeIndicatorsProps) {
-  const { favorites } = useFavorites();
+  const { favorites, reorderFavorites } = useFavorites();
   const { recents } = useRecentIndicators();
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  const handleDragStart = useCallback((index: number) => {
+    setDragIndex(index);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  }, []);
+
+  const handleDragEnd = useCallback(() => {
+    setDragIndex(null);
+    setDragOverIndex(null);
+  }, []);
+
+  const handleDrop = useCallback(
+    (toIndex: number) => {
+      if (dragIndex !== null && dragIndex !== toIndex) {
+        reorderFavorites(dragIndex, toIndex);
+      }
+      setDragIndex(null);
+      setDragOverIndex(null);
+    },
+    [dragIndex, reorderFavorites]
+  );
 
   const { favoriteIndicators, recentIndicators, otherIndicators } = useMemo(() => {
     const favoritesSet = new Set(favorites);
@@ -92,6 +119,12 @@ export function HomeIndicators({ indicators }: HomeIndicatorsProps) {
                 indicator={indicator}
                 index={index}
                 totalCount={favoriteIndicators.length}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
+                onDrop={handleDrop}
+                isDragging={dragIndex === index}
+                isDragOver={dragOverIndex === index && dragIndex !== index}
               />
             ))}
           </div>

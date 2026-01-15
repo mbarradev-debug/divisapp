@@ -11,12 +11,24 @@ interface FavoriteIndicatorItemProps {
   indicator: IndicatorValue;
   index: number;
   totalCount: number;
+  onDragStart: (index: number) => void;
+  onDragOver: (e: React.DragEvent, index: number) => void;
+  onDragEnd: () => void;
+  onDrop: (index: number) => void;
+  isDragging: boolean;
+  isDragOver: boolean;
 }
 
 export function FavoriteIndicatorItem({
   indicator,
   index,
   totalCount,
+  onDragStart,
+  onDragOver,
+  onDragEnd,
+  onDrop,
+  isDragging,
+  isDragOver,
 }: FavoriteIndicatorItemProps) {
   const { moveFavorite } = useFavorites();
 
@@ -24,10 +36,24 @@ export function FavoriteIndicatorItem({
   const canMoveDown = index < totalCount - 1;
 
   return (
-    <div className="relative rounded-lg border border-border-subtle bg-bg-subtle hover:border-border hover:bg-bg-muted">
+    <div
+      draggable
+      onDragStart={() => onDragStart(index)}
+      onDragOver={(e) => onDragOver(e, index)}
+      onDragEnd={onDragEnd}
+      onDrop={() => onDrop(index)}
+      className={`relative rounded-lg border bg-bg-subtle ${
+        isDragging
+          ? 'opacity-50 border-border'
+          : isDragOver
+            ? 'border-primary'
+            : 'border-border-subtle hover:border-border hover:bg-bg-muted'
+      }`}
+    >
       <Link
         href={`/${indicator.codigo}`}
         className="block p-4 pl-10 pr-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset rounded-lg"
+        draggable={false}
       >
         <p className="text-[length:var(--text-label)] font-medium leading-[var(--leading-label)] text-text">
           {indicator.nombre}

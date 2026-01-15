@@ -104,6 +104,73 @@ describe('favorites storage logic', () => {
     });
   });
 
+  describe('reorderFavorites', () => {
+    function reorderFavorites(favorites: string[], fromIndex: number, toIndex: number): string[] {
+      if (fromIndex < 0 || fromIndex >= favorites.length) return favorites;
+      if (toIndex < 0 || toIndex >= favorites.length) return favorites;
+      if (fromIndex === toIndex) return favorites;
+
+      const newFavorites = [...favorites];
+      const [removed] = newFavorites.splice(fromIndex, 1);
+      newFavorites.splice(toIndex, 0, removed);
+      return newFavorites;
+    }
+
+    it('should move item from index 0 to index 2', () => {
+      const favorites = ['uf', 'dolar', 'euro'];
+      const result = reorderFavorites(favorites, 0, 2);
+      expect(result).toEqual(['dolar', 'euro', 'uf']);
+    });
+
+    it('should move item from index 2 to index 0', () => {
+      const favorites = ['uf', 'dolar', 'euro'];
+      const result = reorderFavorites(favorites, 2, 0);
+      expect(result).toEqual(['euro', 'uf', 'dolar']);
+    });
+
+    it('should move item to adjacent position forward', () => {
+      const favorites = ['uf', 'dolar', 'euro', 'utm'];
+      const result = reorderFavorites(favorites, 1, 2);
+      expect(result).toEqual(['uf', 'euro', 'dolar', 'utm']);
+    });
+
+    it('should move item to adjacent position backward', () => {
+      const favorites = ['uf', 'dolar', 'euro', 'utm'];
+      const result = reorderFavorites(favorites, 2, 1);
+      expect(result).toEqual(['uf', 'euro', 'dolar', 'utm']);
+    });
+
+    it('should not change array when fromIndex equals toIndex', () => {
+      const favorites = ['uf', 'dolar', 'euro'];
+      const result = reorderFavorites(favorites, 1, 1);
+      expect(result).toEqual(['uf', 'dolar', 'euro']);
+    });
+
+    it('should not change array when fromIndex is out of bounds', () => {
+      const favorites = ['uf', 'dolar'];
+      expect(reorderFavorites(favorites, -1, 0)).toEqual(['uf', 'dolar']);
+      expect(reorderFavorites(favorites, 5, 0)).toEqual(['uf', 'dolar']);
+    });
+
+    it('should not change array when toIndex is out of bounds', () => {
+      const favorites = ['uf', 'dolar'];
+      expect(reorderFavorites(favorites, 0, -1)).toEqual(['uf', 'dolar']);
+      expect(reorderFavorites(favorites, 0, 5)).toEqual(['uf', 'dolar']);
+    });
+
+    it('should handle moving last item to first position', () => {
+      const favorites = ['a', 'b', 'c', 'd', 'e'];
+      const result = reorderFavorites(favorites, 4, 0);
+      expect(result).toEqual(['e', 'a', 'b', 'c', 'd']);
+    });
+
+    it('should handle moving first item to last position', () => {
+      const favorites = ['a', 'b', 'c', 'd', 'e'];
+      const result = reorderFavorites(favorites, 0, 4);
+      expect(result).toEqual(['b', 'c', 'd', 'e', 'a']);
+    });
+  });
+
   describe('isFavorite', () => {
     function isFavorite(favorites: string[], codigo: string): boolean {
       return favorites.includes(codigo);
