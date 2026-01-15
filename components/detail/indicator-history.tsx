@@ -93,6 +93,7 @@ export function IndicatorHistory({ serie, unidadMedida }: IndicatorHistoryProps)
       {chartData.length >= 2 && (
         <LineChartBase
           data={chartData}
+          height={120}
           formatValue={(v) => formatValue(v, unidadMedida)}
           formatDate={(date) =>
             new Date(date).toLocaleDateString('es-CL', {

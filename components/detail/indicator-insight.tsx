@@ -63,16 +63,19 @@ export function IndicatorInsight({ insight }: IndicatorInsightProps) {
         id="insight-heading"
         className="text-[length:var(--text-label)] font-medium leading-[var(--leading-label)] text-text"
       >
-        Qué significa este indicador
+        Cómo interpretar los cambios
       </h2>
 
-      <p className="mt-3 text-[length:var(--text-label)] leading-[var(--leading-label)] text-text-secondary">
-        {insight.contextualSummary.description}
-      </p>
-
-      <p className="mt-2 text-[length:var(--text-label)] leading-[var(--leading-label)] text-text-secondary">
-        {insight.contextualSummary.represents}
-      </p>
+      <div className="mt-3 space-y-2">
+        <p className="text-[length:var(--text-label)] leading-[var(--leading-label)] text-text-secondary">
+          <span className="font-medium text-success">↑ Si sube:</span>{' '}
+          {insight.implications.upward}
+        </p>
+        <p className="text-[length:var(--text-label)] leading-[var(--leading-label)] text-text-secondary">
+          <span className="font-medium text-error">↓ Si baja:</span>{' '}
+          {insight.implications.downward}
+        </p>
+      </div>
 
       <div className="mt-4 border-t border-border-subtle pt-4">
         <h3 className="text-[length:var(--text-small)] font-medium uppercase tracking-wide leading-[var(--leading-small)] text-text-muted">

@@ -4,7 +4,7 @@ import { getIndicatorByCode, MindicadorApiError } from '@/lib/api/mindicador';
 import { IndicatorHeader } from '@/components/detail/indicator-header';
 import { IndicatorHistory } from '@/components/detail/indicator-history';
 import { IndicatorInsight } from '@/components/detail/indicator-insight';
-import { InsightAnchor } from '@/components/detail/insight-anchor';
+import { IndicatorInsightBlock } from '@/components/detail/indicator-insight-block';
 import { RecentTracker } from '@/components/detail/recent-tracker';
 import { hasIndicatorContext, getIndicatorContext } from '@/lib/indicator-context';
 import { deriveTrendSignals } from '@/lib/trend-signals';
@@ -71,7 +71,12 @@ export default async function IndicatorPage({ params }: IndicatorPageProps) {
         valorAnterior={data.serie[1]?.valor}
       />
       {hasIndicatorContext(data.codigo) && data.serie.length >= 2 && (
-        <InsightAnchor />
+        <IndicatorInsightBlock
+          insight={composeInsight({
+            context: getIndicatorContext(data.codigo),
+            signals: deriveTrendSignals(data.serie),
+          })}
+        />
       )}
       <IndicatorHistory serie={data.serie} unidadMedida={data.unidad_medida} />
       {hasIndicatorContext(data.codigo) && data.serie.length >= 2 && (
