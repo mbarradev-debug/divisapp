@@ -17,6 +17,7 @@ export function HomeIndicators({ indicators }: HomeIndicatorsProps) {
   const { recents } = useRecentIndicators();
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [settledCodigo, setSettledCodigo] = useState<string | null>(null);
   const dragIndexRef = useRef<number | null>(null);
 
   const handleDragStart = useCallback((index: number) => {
@@ -39,13 +40,16 @@ export function HomeIndicators({ indicators }: HomeIndicatorsProps) {
     (toIndex: number) => {
       const fromIndex = dragIndexRef.current;
       if (fromIndex !== null && fromIndex !== toIndex) {
+        const movedCodigo = favorites[fromIndex];
         reorderFavorites(fromIndex, toIndex);
+        setSettledCodigo(movedCodigo);
+        setTimeout(() => setSettledCodigo(null), 300);
       }
       dragIndexRef.current = null;
       setDragIndex(null);
       setDragOverIndex(null);
     },
-    [reorderFavorites]
+    [reorderFavorites, favorites]
   );
 
   const handleTouchStart = useCallback((index: number) => {
@@ -74,14 +78,17 @@ export function HomeIndicators({ indicators }: HomeIndicatorsProps) {
         const toIndex = parseInt(target.getAttribute('data-favorite-index') || '', 10);
         const fromIndex = dragIndexRef.current;
         if (!isNaN(toIndex) && fromIndex !== null && fromIndex !== toIndex) {
+          const movedCodigo = favorites[fromIndex];
           reorderFavorites(fromIndex, toIndex);
+          setSettledCodigo(movedCodigo);
+          setTimeout(() => setSettledCodigo(null), 300);
         }
       }
       dragIndexRef.current = null;
       setDragIndex(null);
       setDragOverIndex(null);
     },
-    [reorderFavorites]
+    [reorderFavorites, favorites]
   );
 
   const { favoriteIndicators, recentIndicators, otherIndicators } = useMemo(() => {
@@ -168,6 +175,7 @@ export function HomeIndicators({ indicators }: HomeIndicatorsProps) {
                 onTouchEnd={handleTouchEnd}
                 isDragging={dragIndex === index}
                 isDragOver={dragOverIndex === index && dragIndex !== index}
+                isSettling={settledCodigo === indicator.codigo}
               />
             ))}
           </div>

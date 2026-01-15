@@ -17,6 +17,7 @@ interface FavoriteIndicatorItemProps {
   onTouchEnd: (e: React.TouchEvent) => void;
   isDragging: boolean;
   isDragOver: boolean;
+  isSettling: boolean;
 }
 
 export function FavoriteIndicatorItem({
@@ -31,6 +32,7 @@ export function FavoriteIndicatorItem({
   onTouchEnd,
   isDragging,
   isDragOver,
+  isSettling,
 }: FavoriteIndicatorItemProps) {
   return (
     <div
@@ -48,7 +50,9 @@ export function FavoriteIndicatorItem({
           ? 'scale-[1.02] shadow-lg border-border opacity-90'
           : isDragOver
             ? 'border-primary bg-bg-muted'
-            : 'border-border-subtle hover:border-border hover:bg-bg-muted'
+            : isSettling
+              ? 'shadow-md border-border'
+              : 'border-border-subtle hover:border-border hover:bg-bg-muted'
       }`}
     >
       <Link
