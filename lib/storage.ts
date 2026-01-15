@@ -11,6 +11,9 @@ export interface ConversionResultSnapshot {
   toName: string;
   toUnit: string;
   result: number;
+  fromValue: number;
+  toValue: number;
+  referenceDate: string;
 }
 
 export interface ConversionState {
@@ -54,7 +57,10 @@ function getStoredState(): ConversionState {
           typeof result.fromName === 'string' &&
           typeof result.toName === 'string' &&
           typeof result.toUnit === 'string' &&
-          typeof result.result === 'number');
+          typeof result.result === 'number' &&
+          typeof result.fromValue === 'number' &&
+          typeof result.toValue === 'number' &&
+          typeof result.referenceDate === 'string');
 
       if (validResult) {
         return {

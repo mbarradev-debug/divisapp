@@ -35,12 +35,18 @@ export function ConvertClient({ indicators }: ConvertClientProps) {
       const clpValue = amount * fromIndicator.valor;
       const result = clpValue / toIndicator.valor;
 
+      // Use the date from the real indicator (not CLP which has no date)
+      const referenceDate = fromIndicator.fecha || toIndicator.fecha;
+
       const newConversion: ConversionResultSnapshot = {
         amount,
         fromName: fromIndicator.nombre,
         toName: toIndicator.nombre,
         toUnit: toIndicator.unidad_medida,
         result,
+        fromValue: fromIndicator.valor,
+        toValue: toIndicator.valor,
+        referenceDate,
       };
 
       setConversion(newConversion);
@@ -58,6 +64,9 @@ export function ConvertClient({ indicators }: ConvertClientProps) {
           toName={conversion.toName}
           toUnit={conversion.toUnit}
           result={conversion.result}
+          fromValue={conversion.fromValue}
+          toValue={conversion.toValue}
+          referenceDate={conversion.referenceDate}
         />
       )}
     </div>
