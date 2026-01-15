@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { IndicatorValue } from '@/lib/api/mindicador';
 import { useFavorites, useNotificationPreferences } from '@/lib/storage';
 import { Card, Select } from '@/components/ui';
+import { NotificationPreview } from './notification-preview';
 
 interface NotificationSettingsClientProps {
   indicators: IndicatorValue[];
@@ -133,6 +134,9 @@ export function NotificationSettingsClient({ indicators }: NotificationSettingsC
               )}
             </div>
           </Card>
+
+          {/* Notification preview */}
+          <NotificationPreview preferences={preferences} indicators={indicators} />
 
           {/* Trigger type */}
           <Card header="Tipo de alerta">
