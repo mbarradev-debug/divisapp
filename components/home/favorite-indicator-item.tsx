@@ -43,7 +43,7 @@ export function FavoriteIndicatorItem({
       onTouchStart={() => onTouchStart(index)}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
-      className={`relative rounded-lg border bg-bg-subtle touch-none transition-all ${
+      className={`relative rounded-lg border bg-bg-subtle touch-none transition-all duration-150 active:scale-[0.98] active:shadow-sm active:border-border ${
         isDragging
           ? 'scale-[1.02] shadow-lg border-border opacity-90'
           : isDragOver

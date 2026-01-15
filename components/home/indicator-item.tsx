@@ -9,7 +9,7 @@ interface IndicatorItemProps {
 
 export function IndicatorItem({ indicator }: IndicatorItemProps) {
   return (
-    <div className="relative rounded-lg border border-border-subtle bg-bg-subtle hover:border-border hover:bg-bg-muted">
+    <div className="relative rounded-lg border border-border-subtle bg-bg-subtle transition-all duration-150 hover:border-border hover:bg-bg-muted active:scale-[0.98] active:shadow-sm active:border-border">
       <Link
         href={`/${indicator.codigo}`}
         className="block p-4 pr-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset rounded-lg"
