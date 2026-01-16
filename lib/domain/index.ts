@@ -66,3 +66,12 @@ export {
   createWebPushSubscription,
   fromBrowserPushSubscription,
 } from './web-push-subscription';
+
+export type {
+  DeliveryPort,
+  DeliveryResult,
+  DeliveryAttemptResult,
+  DeliveryErrorCode,
+  DeliveryAdapterConfig,
+  DeliveryAdapterFactory,
+} from './delivery-port';

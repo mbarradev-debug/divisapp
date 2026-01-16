@@ -3,6 +3,15 @@
  *
  * Handles push events and displays notifications.
  * Minimal implementation - no caching or offline support.
+ *
+ * PAYLOAD FORMAT (from send-push Edge Function):
+ * {
+ *   title: string,
+ *   body: string,
+ *   actionUrl?: string,
+ *   data?: Record<string, any>,
+ *   timestamp: number
+ * }
  */
 
 // Push event - show notification when push message received
@@ -11,25 +20,28 @@ self.addEventListener('push', (event) => {
     return;
   }
 
-  let data;
+  let payload;
   try {
-    data = event.data.json();
+    payload = event.data.json();
   } catch {
     // Fallback for text-only messages
-    data = {
+    payload = {
       title: 'DivisApp',
       body: event.data.text(),
     };
   }
 
-  const title = data.title || 'DivisApp';
+  const title = payload.title || 'DivisApp';
   const options = {
-    body: data.body || '',
+    body: payload.body || '',
     icon: '/icon-192.png',
     badge: '/badge-72.png',
-    tag: data.tag || 'divisapp-notification',
+    // Use eventId or timestamp for deduplication
+    tag: payload.data?.eventId || `divisapp-${payload.timestamp || Date.now()}`,
+    renotify: true,
     data: {
-      url: data.actionUrl || '/',
+      url: payload.actionUrl || '/',
+      ...payload.data,
     },
     // Vibration pattern for mobile
     vibrate: [100, 50, 100],
@@ -45,19 +57,27 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
   const url = event.notification.data?.url || '/';
+  const urlToOpen = new URL(url, self.location.origin).href;
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Try to focus an existing window
+      // Try to focus an existing window at the same URL
       for (const client of clientList) {
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
-          client.navigate(url);
+        if (client.url === urlToOpen && 'focus' in client) {
           return client.focus();
         }
       }
+
+      // Try to navigate an existing window
+      for (const client of clientList) {
+        if (client.url.startsWith(self.location.origin) && 'navigate' in client) {
+          return client.navigate(urlToOpen).then((c) => c?.focus());
+        }
+      }
+
       // Open a new window if none exists
       if (clients.openWindow) {
-        return clients.openWindow(url);
+        return clients.openWindow(urlToOpen);
       }
     })
   );
@@ -67,5 +87,16 @@ self.addEventListener('notificationclick', (event) => {
 self.addEventListener('pushsubscriptionchange', (event) => {
   // The subscription has expired or been revoked
   // The client will detect this and resubscribe if needed
-  console.log('Push subscription changed:', event);
+  console.log('[SW] Push subscription changed:', event);
+});
+
+// Service worker lifecycle
+self.addEventListener('install', () => {
+  console.log('[SW] Installing');
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  console.log('[SW] Activating');
+  event.waitUntil(self.clients.claim());
 });
