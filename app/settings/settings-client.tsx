@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useUserSettings } from '@/lib/storage';
+import { useUserSettings, useAuthState } from '@/lib/storage';
 import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import type { ThemePreference, HomeOrderingMode, IndicatorCode } from '@/lib/domain/user-settings';
@@ -42,10 +42,12 @@ const LOCAL_STORAGE_KEYS = [
   'divisapp_recents',
   'divisapp_user_settings',
   'divisapp_notification_preferences',
+  'divisapp_auth_preview',
 ];
 
 export function SettingsClient() {
   const { settings, updateSettings, resetSettings } = useUserSettings();
+  const { isAuthenticated, toggleAuthPreview } = useAuthState();
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const handleThemeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -82,6 +84,86 @@ export function SettingsClient() {
 
   return (
     <div className="flex flex-col gap-8">
+      {/* Account Section */}
+      <section>
+        <h2 className="mb-4 text-[length:var(--text-section)] font-medium leading-[var(--leading-section)] text-text">
+          Cuenta
+        </h2>
+        <div className="rounded-lg border border-border-subtle bg-bg-subtle p-4">
+          <div className="flex items-start gap-3">
+            {/* User icon */}
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-bg-muted">
+              <svg
+                className="h-5 w-5 text-text-secondary"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+                />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <span className="text-[length:var(--text-body)] font-medium leading-[var(--leading-body)] text-text">
+                  {isAuthenticated ? 'Modo vista previa' : 'Usuario anónimo'}
+                </span>
+                {isAuthenticated && (
+                  <span className="rounded bg-info-bg px-1.5 py-0.5 text-[length:var(--text-small)] leading-[var(--leading-small)] text-info-text">
+                    Preview
+                  </span>
+                )}
+              </div>
+              <p className="mt-1 text-[length:var(--text-label)] leading-[var(--leading-label)] text-text-secondary">
+                {isAuthenticated
+                  ? 'Estás viendo una vista previa del modo autenticado. Esta es una simulación.'
+                  : 'La app funciona completamente sin cuenta. Tus datos se guardan localmente en este dispositivo.'}
+              </p>
+            </div>
+          </div>
+
+          {/* Future benefits callout */}
+          <div className="mt-4 rounded-md border border-info-border bg-info-bg p-3">
+            <p className="text-[length:var(--text-label)] leading-[var(--leading-label)] text-info-text">
+              <strong>Próximamente:</strong> Con una cuenta podrás sincronizar
+              tus favoritos y preferencias entre dispositivos.
+            </p>
+          </div>
+
+          {/* Preview toggle for development */}
+          <div className="mt-4 flex items-center justify-between border-t border-border-subtle pt-4">
+            <div>
+              <span className="text-[length:var(--text-label)] font-medium leading-[var(--leading-label)] text-text">
+                Vista previa de cuenta
+              </span>
+              <p className="text-[length:var(--text-small)] leading-[var(--leading-small)] text-text-muted">
+                Simula el estado autenticado (solo para desarrollo)
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={isAuthenticated}
+              onClick={toggleAuthPreview}
+              className={`relative h-6 w-11 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset ${
+                isAuthenticated ? 'bg-primary' : 'bg-border-strong'
+              }`}
+            >
+              <span
+                className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-bg-subtle transition-transform ${
+                  isAuthenticated ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+      </section>
+
       {/* Preferences Section */}
       <section>
         <h2 className="mb-4 text-[length:var(--text-section)] font-medium leading-[var(--leading-section)] text-text">

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { ConvertLink } from "@/components/navigation/convert-link";
+import { UserStateIndicator } from "@/components/navigation/user-state-indicator";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -38,7 +39,10 @@ export default function RootLayout({
               >
                 DivisApp
               </Link>
-              <ConvertLink />
+              <div className="flex items-center gap-2">
+                <UserStateIndicator />
+                <ConvertLink />
+              </div>
             </nav>
           </header>
           <main className="px-4 py-6 sm:px-6">{children}</main>

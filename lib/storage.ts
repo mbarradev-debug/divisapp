@@ -4,6 +4,7 @@ import {
   DEFAULT_USER_SETTINGS,
   USER_SETTINGS_VERSION,
 } from './domain/user-settings';
+import { type User, createAnonymousUser } from './domain/user';
 
 const CONVERSION_STORAGE_KEY = 'divisapp_last_conversion';
 const FAVORITES_STORAGE_KEY = 'divisapp_favorites';
@@ -689,5 +690,131 @@ export function useUserSettings(): UseUserSettingsReturn {
     settings,
     updateSettings: update,
     resetSettings: reset,
+  };
+}
+
+// Auth state storage (mock/preview only)
+//
+// This provides a UX-level simulation of authenticated state.
+// No real authentication is performed - this is purely for UI preview.
+
+const AUTH_PREVIEW_STORAGE_KEY = 'divisapp_auth_preview';
+
+interface AuthState {
+  isAuthenticated: boolean;
+  user: User;
+}
+
+function generateUserId(): string {
+  return crypto.randomUUID();
+}
+
+function getStoredAuthState(): AuthState {
+  if (typeof window === 'undefined') {
+    return { isAuthenticated: false, user: createAnonymousUser('anonymous') };
+  }
+
+  try {
+    const stored = localStorage.getItem(AUTH_PREVIEW_STORAGE_KEY);
+    if (!stored) {
+      const userId = generateUserId();
+      return { isAuthenticated: false, user: createAnonymousUser(userId) };
+    }
+
+    const parsed = JSON.parse(stored);
+
+    if (
+      typeof parsed === 'object' &&
+      parsed !== null &&
+      typeof parsed.isAuthenticated === 'boolean' &&
+      typeof parsed.user === 'object' &&
+      parsed.user !== null &&
+      typeof parsed.user.id === 'string' &&
+      typeof parsed.user.isAnonymous === 'boolean' &&
+      typeof parsed.user.createdAt === 'string'
+    ) {
+      return parsed as AuthState;
+    }
+
+    const userId = generateUserId();
+    return { isAuthenticated: false, user: createAnonymousUser(userId) };
+  } catch {
+    const userId = generateUserId();
+    return { isAuthenticated: false, user: createAnonymousUser(userId) };
+  }
+}
+
+function setStoredAuthState(state: AuthState): void {
+  if (typeof window === 'undefined') return;
+
+  try {
+    localStorage.setItem(AUTH_PREVIEW_STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    // Silently fail if localStorage is unavailable
+  }
+}
+
+let authListeners: Array<() => void> = [];
+let cachedAuthState: AuthState | null = null;
+
+function subscribeAuth(listener: () => void): () => void {
+  authListeners = [...authListeners, listener];
+  return () => {
+    authListeners = authListeners.filter((l) => l !== listener);
+  };
+}
+
+function getAuthSnapshot(): AuthState {
+  if (cachedAuthState === null) {
+    cachedAuthState = getStoredAuthState();
+  }
+  return cachedAuthState;
+}
+
+const serverAuthState: AuthState = {
+  isAuthenticated: false,
+  user: createAnonymousUser('anonymous'),
+};
+
+function getAuthServerSnapshot(): AuthState {
+  return serverAuthState;
+}
+
+function updateAuthState(newState: AuthState): void {
+  cachedAuthState = newState;
+  setStoredAuthState(newState);
+  authListeners.forEach((listener) => listener());
+}
+
+interface UseAuthStateReturn {
+  isAuthenticated: boolean;
+  user: User;
+  toggleAuthPreview: () => void;
+}
+
+export function useAuthState(): UseAuthStateReturn {
+  const state = useSyncExternalStore(
+    subscribeAuth,
+    getAuthSnapshot,
+    getAuthServerSnapshot
+  );
+
+  const toggleAuthPreview = useCallback(() => {
+    const current = getAuthSnapshot();
+    const newIsAuthenticated = !current.isAuthenticated;
+    updateAuthState({
+      ...current,
+      isAuthenticated: newIsAuthenticated,
+      user: {
+        ...current.user,
+        isAnonymous: !newIsAuthenticated,
+      },
+    });
+  }, []);
+
+  return {
+    isAuthenticated: state.isAuthenticated,
+    user: state.user,
+    toggleAuthPreview,
   };
 }
