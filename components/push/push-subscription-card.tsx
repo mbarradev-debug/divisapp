@@ -14,15 +14,28 @@ export function PushSubscriptionCard() {
   const {
     state,
     permission,
-    isSupported,
     isSubscribed,
     error,
     subscribe,
     unsubscribe,
   } = usePushSubscription();
 
+  // Loading state - checked first to ensure consistent SSR/client rendering
+  if (state === 'loading') {
+    return (
+      <div className="rounded-lg border border-border-subtle bg-bg-subtle p-4">
+        <div className="flex items-center gap-3">
+          <LoadingSpinner className="h-5 w-5 text-text-muted" />
+          <span className="text-[length:var(--text-body)] leading-[var(--leading-body)] text-text-secondary">
+            Cargando...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   // Unsupported browser
-  if (!isSupported) {
+  if (state === 'unsupported') {
     return (
       <div className="rounded-lg border border-border-subtle bg-bg-subtle p-4">
         <div className="flex items-start gap-3">
@@ -55,20 +68,6 @@ export function PushSubscriptionCard() {
               los permisos en la configuración de tu navegador.
             </p>
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Loading state
-  if (state === 'loading') {
-    return (
-      <div className="rounded-lg border border-border-subtle bg-bg-subtle p-4">
-        <div className="flex items-center gap-3">
-          <LoadingSpinner className="h-5 w-5 text-text-muted" />
-          <span className="text-[length:var(--text-body)] leading-[var(--leading-body)] text-text-secondary">
-            Cargando...
-          </span>
         </div>
       </div>
     );

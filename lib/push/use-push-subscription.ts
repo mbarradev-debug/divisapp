@@ -5,6 +5,9 @@
  *
  * React hook for managing Web Push subscription state.
  * Provides subscription status, permission state, and actions.
+ *
+ * Note: Always starts in 'loading' state to avoid hydration mismatches.
+ * Browser capability is only checked after mount.
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -47,15 +50,20 @@ export interface UsePushSubscriptionReturn {
 
 export function usePushSubscription(): UsePushSubscriptionReturn {
   const { user } = useAuthState();
+  // Start with loading state to ensure consistent SSR/client rendering
   const [state, setState] = useState<PushSubscriptionState>('loading');
   const [permission, setPermission] = useState<PushPermissionState>('unsupported');
   const [error, setError] = useState<string | null>(null);
+  // Track support as state to avoid hydration mismatch
+  const [isSupported, setIsSupported] = useState(false);
 
-  const isSupported = isPushSupported();
   const isSubscribed = state === 'subscribed';
 
   const refresh = useCallback(async () => {
-    if (!isSupported) {
+    const supported = isPushSupported();
+    setIsSupported(supported);
+
+    if (!supported) {
       setState('unsupported');
       setPermission('unsupported');
       return;
@@ -82,13 +90,16 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
       setState('error');
       setError(err instanceof Error ? err.message : 'Error checking subscription');
     }
-  }, [isSupported]);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
 
     async function checkSubscription() {
-      if (!isSupported) {
+      const supported = isPushSupported();
+      if (!cancelled) setIsSupported(supported);
+
+      if (!supported) {
         if (!cancelled) {
           setState('unsupported');
           setPermission('unsupported');
@@ -127,7 +138,7 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
     return () => {
       cancelled = true;
     };
-  }, [isSupported]);
+  }, []);
 
   const subscribe = useCallback(async () => {
     if (!isSupported) {

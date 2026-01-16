@@ -5,4 +5,4 @@
  */
 
 export { PushSubscriptionCard } from './push-subscription-card';
-export { PushTestPanel } from './push-test-panel';
+export { PushTestButton } from './push-test-button';
