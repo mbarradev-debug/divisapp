@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useUserSettings, useAuthState } from '@/lib/storage';
 import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { PushSubscriptionCard } from '@/components/push';
 import type { ThemePreference, HomeOrderingMode, IndicatorCode } from '@/lib/domain/user-settings';
 
 const APP_VERSION = '0.1.0';
@@ -43,6 +44,7 @@ const LOCAL_STORAGE_KEYS = [
   'divisapp_user_settings',
   'divisapp_notification_preferences',
   'divisapp_auth_preview',
+  'divisapp_push_subscription',
 ];
 
 export function SettingsClient() {
@@ -162,6 +164,14 @@ export function SettingsClient() {
             </button>
           </div>
         </div>
+      </section>
+
+      {/* Notifications Section */}
+      <section>
+        <h2 className="mb-4 text-[length:var(--text-section)] font-medium leading-[var(--leading-section)] text-text">
+          Notificaciones
+        </h2>
+        <PushSubscriptionCard />
       </section>
 
       {/* Preferences Section */}

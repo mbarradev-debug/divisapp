@@ -56,3 +56,13 @@ export {
   createChannelSubscription,
   isSubscriptionDeliverable,
 } from './notification-channel';
+
+export type {
+  WebPushKeys,
+  WebPushSubscriptionData,
+  WebPushSubscription,
+} from './web-push-subscription';
+export {
+  createWebPushSubscription,
+  fromBrowserPushSubscription,
+} from './web-push-subscription';
