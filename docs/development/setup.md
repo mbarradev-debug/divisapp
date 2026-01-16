@@ -285,13 +285,39 @@ sudo sysctl -p
 
 ## Environment Variables
 
-Currently, DivisApp doesn't require any environment variables. The mindicador.cl API is public and doesn't need authentication.
+DivisApp requires environment variables for some features.
 
-If you need to add environment variables in the future:
+### Required Variables
 
-1. Create a `.env.local` file in the project root
-2. Add variables in the format `VARIABLE_NAME=value`
-3. Access in code with `process.env.VARIABLE_NAME`
+Create a `.env.local` file in the project root:
+
+```bash
+# Supabase connection
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+
+# Web Push (for notifications)
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=your-vapid-public-key
+```
+
+### How to Get These Values
+
+**Supabase**: Go to your Supabase project → Settings → API → Copy URL and anon key.
+
+**VAPID Keys**: Generate using:
+```bash
+npx web-push generate-vapid-keys
+```
+
+### Server-Side Secrets (Supabase)
+
+For the Edge Function to work, configure secrets:
+
+```bash
+npx supabase secrets set \
+  VAPID_PUBLIC_KEY="your-public-key" \
+  VAPID_PRIVATE_KEY="your-private-key"
+```
 
 **Important**: Never commit `.env.local` to Git. It's already in `.gitignore`.
 
