@@ -221,6 +221,8 @@ git checkout develop
 
 | Version | Release Date | Highlights |
 |---------|--------------|------------|
+| v1.5.0 | January 2026 | Settings page, auth infrastructure scaffold, user preferences |
+| v1.4.0 | January 2026 | Drag and drop reordering for favorites |
 | v1.1.0 | January 2025 | Favorites, charts, smart conversion, performance improvements |
 | v1.0.0 | January 2025 | Initial release with home, detail, and conversion pages |
 

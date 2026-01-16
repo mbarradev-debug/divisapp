@@ -9,7 +9,8 @@ The application provides:
 - A home page showing all indicators with favorites at the top
 - Detail pages with historical charts, trend analysis, and range selection
 - A currency conversion tool with smart defaults and real-time calculation
-- Local persistence for favorites and conversion state
+- A settings page for managing user preferences
+- Local persistence for favorites, conversion state, and settings
 
 ## What Problem Does It Solve?
 
@@ -58,6 +59,7 @@ The documentation is organized into several sections:
 - **[Home Page](features/home.md)**: How the main indicator list and favorites work
 - **[Indicator Detail](features/indicator-detail.md)**: How detail pages with charts and analytics work
 - **[Conversion](features/conversion.md)**: How the currency conversion feature works
+- **[Settings](features/settings.md)**: How user preferences and settings work
 
 ### Development Workflow
 
@@ -70,7 +72,8 @@ The documentation is organized into several sections:
 
 ### Version History
 
-- **[v1.4.0](versions/v1.4.0.md)**: Current version (drag and drop reordering)
+- **[v1.5.0](versions/v1.5.0.md)**: Current version (settings page, auth infrastructure)
+- **[v1.4.0](versions/v1.4.0.md)**: Drag and drop reordering
 - **[v1.1.0](versions/v1.1.0.md)**: Favorites, charts, smart conversion
 - **[v1.0.0](versions/v1.0.0.md)**: Initial release
 
@@ -92,6 +95,7 @@ When you update the code significantly, create a new version document. Previous 
 | Understand how the app works | [Architecture Overview](architecture/overview.md) |
 | Add a new feature | [Folder Structure](architecture/folder-structure.md) |
 | Understand data flow | [Data Flow](architecture/data-flow.md) |
-| See what version 1.4.0 includes | [v1.4.0](versions/v1.4.0.md) |
+| See what version 1.5.0 includes | [v1.5.0](versions/v1.5.0.md) |
+| Manage user settings | [Settings](features/settings.md) |
 | Learn Git conventions | [Branching and Commits](development/branching-and-commits.md) |
 | Understand UX choices | [UX Decisions](architecture/ux-decisions.md) |

@@ -254,22 +254,26 @@ On touch devices, tooltips appear on tap (via focus). This is slightly less disc
 | Drag and drop reordering | Natural, touch-friendly interaction |
 | Real-time conversion | Better user experience |
 | Simple range selector | Matches API capabilities |
-| Local-only storage | No backend needed for MVP |
+| Local-first storage | No backend needed for MVP |
+| Settings page | Centralized preferences management |
+| Feature flags | Safe gradual rollout of features |
 
 ### Temporary (May Change)
 
 | Decision | Current State | Possible Future |
 |----------|--------------|-----------------|
-| No dark mode toggle | System preference only | Manual toggle option |
+| Theme follows system | Settings has option but no live toggle | Manual toggle in header |
 | No export | View only | Export to CSV/PDF |
 | Spanish only | Hardcoded strings | i18n support |
 | No push notifications | Check manually | Alerts for thresholds |
+| Local-only settings | Settings in localStorage | Cloud sync when authenticated |
+| Anonymous-only | Auth infrastructure ready but disabled | OAuth/email sign-in |
 
 ## Trade-offs Made to Keep the MVP Simple
 
-### No User Accounts
+### No User Accounts (Yet)
 
-**Decision**: All data is stored locally in the browser.
+**Decision**: All data is stored locally in the browser. Authentication infrastructure exists but is disabled.
 
 **Trade-off**: Users can't sync favorites across devices.
 
@@ -278,6 +282,8 @@ On touch devices, tooltips appear on tap (via focus). This is slightly less disc
 - Authentication adds complexity
 - Privacy is simpler without user data
 - 90% of users only use one device regularly
+
+**Future**: The auth scaffold (`lib/auth/`) and feature flag (`AUTH_ENABLED`) are ready for when authentication is needed. The settings page already has a preview mode for testing authenticated UX flows.
 
 ### No Historical Comparison
 

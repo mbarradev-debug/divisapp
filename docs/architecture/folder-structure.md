@@ -12,6 +12,11 @@ divisapp/
 │   ├── convert/                  # Conversion feature
 │   │   ├── page.tsx
 │   │   └── conversion-client.tsx
+│   ├── settings/                 # Settings feature
+│   │   ├── page.tsx
+│   │   └── settings-client.tsx
+│   ├── notifications/            # Notification settings
+│   │   └── page.tsx
 │   ├── globals.css               # Global styles and CSS variables
 │   ├── layout.tsx                # Root layout (header, navigation)
 │   ├── not-found.tsx             # 404 error page
@@ -34,7 +39,8 @@ divisapp/
 │   │   ├── home-indicators.tsx
 │   │   └── indicator-item.tsx
 │   ├── navigation/               # Navigation components
-│   │   └── convert-link.tsx
+│   │   ├── convert-link.tsx
+│   │   └── user-state-indicator.tsx
 │   └── ui/                       # Reusable UI primitives
 │       ├── index.ts              # Barrel export
 │       ├── button.tsx
@@ -50,6 +56,16 @@ divisapp/
 │   │   ├── mindicador.ts         # mindicador.cl API client
 │   │   └── __tests__/            # API tests
 │   │       └── mindicador.test.ts
+│   ├── auth/                     # Authentication scaffold (disabled)
+│   │   ├── index.ts              # Auth module exports
+│   │   └── types.ts              # Auth types for future use
+│   ├── domain/                   # Domain models
+│   │   ├── index.ts              # Domain exports
+│   │   ├── user.ts               # User type and factory
+│   │   └── user-settings.ts      # UserSettings type and defaults
+│   ├── __tests__/                # Utility tests
+│   │   └── storage.test.ts
+│   ├── feature-flags.ts          # Feature toggles
 │   ├── format.ts                 # Number and date formatting
 │   └── storage.ts                # localStorage hooks
 │
@@ -78,6 +94,8 @@ This is where Next.js App Router pages live. The folder structure directly maps 
 |---------------|-----|---------|
 | `app/page.tsx` | `/` | Home page |
 | `app/convert/page.tsx` | `/convert` | Conversion page |
+| `app/settings/page.tsx` | `/settings` | Settings page |
+| `app/notifications/page.tsx` | `/notifications` | Notification settings |
 | `app/[indicator]/page.tsx` | `/dolar`, `/uf`, etc. | Dynamic indicator pages |
 | `app/not-found.tsx` | Any invalid URL | 404 error page |
 | `app/layout.tsx` | All pages | Shared layout (header) |
@@ -185,6 +203,16 @@ lib/
 │   ├── mindicador.ts          # API client functions and types
 │   └── __tests__/
 │       └── mindicador.test.ts  # Tests for the API client
+├── auth/                       # Authentication scaffold (disabled by default)
+│   ├── index.ts               # Barrel exports
+│   └── types.ts               # Auth types for future use
+├── domain/                     # Domain models
+│   ├── index.ts               # Barrel exports
+│   ├── user.ts                # User type and factory
+│   └── user-settings.ts       # UserSettings type and defaults
+├── __tests__/
+│   └── storage.test.ts        # Storage hook tests
+├── feature-flags.ts            # Feature toggles (AUTH_ENABLED, etc.)
 ├── format.ts                   # Locale-aware formatting functions
 └── storage.ts                  # localStorage hooks
 ```
@@ -221,16 +249,69 @@ formatDate('2025-01-14');        // "14 ene 2025"
 Contains localStorage-backed React hooks:
 
 ```tsx
-import { useFavorites, usePersistedConversion } from '@/lib/storage';
+import { useFavorites, usePersistedConversion, useUserSettings, useAuthState } from '@/lib/storage';
 
 // Favorites management
 const { favorites, isFavorite, toggleFavorite, reorderFavorites } = useFavorites();
 
 // Conversion state persistence
 const { conversion, setConversion } = usePersistedConversion();
+
+// User settings management
+const { settings, updateSettings, resetSettings } = useUserSettings();
+
+// Auth state (preview mode only)
+const { isAuthenticated, user, toggleAuthPreview } = useAuthState();
 ```
 
 These hooks use `useSyncExternalStore` for SSR-safe localStorage access.
+
+### Domain Models (`domain/`)
+
+Contains provider-agnostic type definitions:
+
+```tsx
+import type { User, UserSettings } from '@/lib/domain';
+
+// User represents anonymous or authenticated users
+interface User {
+  id: UserId;
+  isAnonymous: boolean;
+  createdAt: string;
+}
+
+// UserSettings stores user preferences with versioning
+interface UserSettings {
+  version: number;
+  theme: ThemePreference;
+  defaultIndicator: IndicatorCode;
+  homeOrderingMode: HomeOrderingMode;
+  alertsEnabled: boolean;
+}
+```
+
+### Feature Flags (`feature-flags.ts`)
+
+Centralized feature toggles for gradual rollout:
+
+```tsx
+import { AUTH_ENABLED } from '@/lib/feature-flags';
+
+// AUTH_ENABLED defaults to false
+// Enable via NEXT_PUBLIC_AUTH_ENABLED=true
+if (AUTH_ENABLED) {
+  // Auth-specific code paths
+}
+```
+
+### Auth Scaffold (`auth/`)
+
+Structural foundation for future authentication (disabled by default):
+
+- `types.ts`: Provider-agnostic auth types compatible with Auth.js
+- `index.ts`: Barrel exports including `AUTH_ENABLED` flag
+
+This scaffold has zero runtime impact when `AUTH_ENABLED=false`.
 
 ## The `public/` Folder
 
