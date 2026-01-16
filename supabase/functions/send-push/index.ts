@@ -4,15 +4,18 @@
  * Delivers Web Push notifications to subscribed browsers.
  * Handles VAPID signing, payload encryption, and delivery result reporting.
  *
+ * Table schema (DO NOT MODIFY):
+ * - endpoint (text, NOT NULL, UNIQUE) - used as primary identifier
+ * - p256dh (text, NOT NULL)
+ * - auth (text, NOT NULL)
+ * - user_id (uuid, NULLABLE)
+ * - expiration_time (bigint, NULLABLE)
+ * - user_agent (text, NULLABLE)
+ *
  * SECURITY:
  * - VAPID credentials stored as Supabase secrets (never in code)
  * - Request validation via Authorization header
  * - No user data exposed in error responses
- *
- * EXTENSIBILITY:
- * This function handles Web Push specifically. Future mobile push delivery
- * would be implemented as separate Edge Functions (e.g., send-fcm, send-apns)
- * with a common orchestrator that fans out to appropriate channels.
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
@@ -34,7 +37,7 @@ interface PushDeliveryRequest {
   /** Notification event ID for tracking */
   eventId: string;
 
-  /** Target user ID to resolve subscriptions */
+  /** Target user ID (not used for anonymous subscriptions) */
   userId: string;
 
   /** Notification content */
@@ -45,19 +48,18 @@ interface PushDeliveryRequest {
     data?: Record<string, string | number | boolean>;
   };
 
-  /** Optional: specific subscription IDs to target */
+  /** Optional: specific subscription endpoints to target */
   subscriptionIds?: string[];
 }
 
 /**
  * Web Push subscription data from database.
+ * Matches actual push_subscriptions table schema.
  */
 interface SubscriptionRow {
-  id: string;
-  user_id: string;
   endpoint: string;
-  p256dh_key: string;
-  auth_key: string;
+  p256dh: string;
+  auth: string;
 }
 
 /**
@@ -122,11 +124,24 @@ async function createVapidJwt(audience: string): Promise<string> {
 
   const signatureInput = `${encodedHeader}.${encodedPayload}`;
 
-  // Import private key for signing
-  const privateKeyBytes = base64UrlToUint8Array(VAPID_PRIVATE_KEY!);
+  // Import private key for signing (VAPID keys are raw 32-byte EC private keys)
+  // Convert raw private key to JWK format for import
+  const jwk = {
+    kty: 'EC',
+    crv: 'P-256',
+    d: VAPID_PRIVATE_KEY!, // Private key component (base64url)
+    x: '', // Will be derived - placeholder
+    y: '', // Will be derived - placeholder
+  };
+
+  // Extract x and y from public key (65 bytes: 0x04 + 32 bytes x + 32 bytes y)
+  const publicKeyBytes = base64UrlToUint8Array(VAPID_PUBLIC_KEY!);
+  jwk.x = uint8ArrayToBase64Url(publicKeyBytes.slice(1, 33));
+  jwk.y = uint8ArrayToBase64Url(publicKeyBytes.slice(33, 65));
+
   const privateKey = await crypto.subtle.importKey(
-    'pkcs8',
-    privateKeyBytes,
+    'jwk',
+    jwk,
     { name: 'ECDSA', namedCurve: 'P-256' },
     false,
     ['sign']
@@ -267,6 +282,8 @@ async function sendPushToSubscription(
   subscription: SubscriptionRow,
   payload: string
 ): Promise<AttemptResult> {
+  console.log('[send-push] Sending to endpoint:', subscription.endpoint.slice(0, 80) + '...');
+
   try {
     // Extract origin from endpoint for VAPID audience
     const endpointUrl = new URL(subscription.endpoint);
@@ -275,12 +292,14 @@ async function sendPushToSubscription(
     // Create VAPID authorization
     const vapidJwt = await createVapidJwt(audience);
     const authorization = `vapid t=${vapidJwt}, k=${VAPID_PUBLIC_KEY}`;
+    console.log('[send-push] VAPID audience:', audience);
+    console.log('[send-push] Authorization header length:', authorization.length);
 
-    // Encrypt the payload
+    // Encrypt the payload (using correct column names: p256dh, auth)
     const { ciphertext, salt, localPublicKey } = await encryptPayload(
       payload,
-      subscription.p256dh_key,
-      subscription.auth_key
+      subscription.p256dh,
+      subscription.auth
     );
 
     // Build the body with aes128gcm header
@@ -296,6 +315,7 @@ async function sendPushToSubscription(
     body.set(ciphertext, header.length);
 
     // Send to push service
+    console.log('[send-push] Posting to push service...');
     const response = await fetch(subscription.endpoint, {
       method: 'POST',
       headers: {
@@ -308,9 +328,13 @@ async function sendPushToSubscription(
       body,
     });
 
+    const responseText = await response.text();
+    console.log('[send-push] Push service response:', response.status, responseText);
+
     if (response.ok || response.status === 201) {
+      console.log('[send-push] Delivery successful!');
       return {
-        subscriptionId: subscription.id,
+        subscriptionId: subscription.endpoint,
         success: true,
       };
     }
@@ -318,7 +342,7 @@ async function sendPushToSubscription(
     // Check if subscription is gone
     if (GONE_STATUS_CODES.includes(response.status)) {
       return {
-        subscriptionId: subscription.id,
+        subscriptionId: subscription.endpoint,
         success: false,
         errorCode: 'expired_subscription',
         errorMessage: `Push service returned ${response.status}`,
@@ -329,7 +353,7 @@ async function sendPushToSubscription(
     // Rate limiting
     if (response.status === 429) {
       return {
-        subscriptionId: subscription.id,
+        subscriptionId: subscription.endpoint,
         success: false,
         errorCode: 'rate_limited',
         errorMessage: 'Push service rate limit exceeded',
@@ -339,7 +363,7 @@ async function sendPushToSubscription(
 
     // Other errors
     return {
-      subscriptionId: subscription.id,
+      subscriptionId: subscription.endpoint,
       success: false,
       errorCode: 'provider_error',
       errorMessage: `Push service returned ${response.status}`,
@@ -347,7 +371,7 @@ async function sendPushToSubscription(
     };
   } catch (error) {
     return {
-      subscriptionId: subscription.id,
+      subscriptionId: subscription.endpoint,
       success: false,
       errorCode: 'network_error',
       errorMessage: error instanceof Error ? error.message : 'Unknown error',
@@ -356,18 +380,22 @@ async function sendPushToSubscription(
   }
 }
 
+// CORS headers for local development
+const corsHeaders = {
+  'Access-Control-Allow-Origin': 'http://localhost:3000',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'content-type, authorization',
+};
+
 /**
  * Main handler for push delivery requests.
  */
 serve(async (req) => {
   // CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      },
+    return new Response('ok', {
+      status: 200,
+      headers: corsHeaders,
     });
   }
 
@@ -375,7 +403,7 @@ serve(async (req) => {
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
     });
   }
 
@@ -384,7 +412,7 @@ serve(async (req) => {
     console.error('VAPID credentials not configured');
     return new Response(JSON.stringify({ error: 'Server configuration error' }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
     });
   }
 
@@ -392,38 +420,35 @@ serve(async (req) => {
     const body: PushDeliveryRequest = await req.json();
 
     // Validate request
-    if (!body.eventId || !body.userId || !body.notification) {
+    if (!body.eventId || !body.notification) {
       return new Response(JSON.stringify({ error: 'Invalid request body' }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
       });
     }
 
     // Create Supabase client with service role
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Get subscriptions for user
-    let query = supabase
+    // Get all subscriptions (anonymous users - no user_id filter)
+    // Select only the columns that exist in the actual table
+    console.log('[send-push] Querying subscriptions...');
+    const { data: subscriptions, error: queryError } = await supabase
       .from('push_subscriptions')
-      .select('id, user_id, endpoint, p256dh_key, auth_key')
-      .eq('user_id', body.userId);
-
-    // Filter by specific IDs if provided
-    if (body.subscriptionIds && body.subscriptionIds.length > 0) {
-      query = query.in('id', body.subscriptionIds);
-    }
-
-    const { data: subscriptions, error: queryError } = await query;
+      .select('endpoint, p256dh, auth');
 
     if (queryError) {
-      console.error('Error querying subscriptions:', queryError);
-      return new Response(JSON.stringify({ error: 'Database error' }), {
+      console.error('[send-push] Error querying subscriptions:', queryError);
+      return new Response(JSON.stringify({ error: 'Database error', details: queryError.message }), {
         status: 500,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
       });
     }
 
+    console.log('[send-push] Found subscriptions:', subscriptions?.length ?? 0);
+
     if (!subscriptions || subscriptions.length === 0) {
+      console.log('[send-push] No subscriptions found, returning empty result');
       return new Response(
         JSON.stringify({
           eventId: body.eventId,
@@ -435,7 +460,7 @@ serve(async (req) => {
         }),
         {
           status: 200,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
         }
       );
     }
@@ -454,17 +479,17 @@ serve(async (req) => {
       subscriptions.map((sub) => sendPushToSubscription(sub, payload))
     );
 
-    // Collect subscriptions to remove
+    // Collect subscriptions to remove (by endpoint)
     const subscriptionsToRemove = results
       .filter((r) => r.shouldRemove)
       .map((r) => r.subscriptionId);
 
-    // Clean up invalid subscriptions
+    // Clean up invalid subscriptions by endpoint
     if (subscriptionsToRemove.length > 0) {
       const { error: deleteError } = await supabase
         .from('push_subscriptions')
         .delete()
-        .in('id', subscriptionsToRemove);
+        .in('endpoint', subscriptionsToRemove);
 
       if (deleteError) {
         console.error('Error cleaning up subscriptions:', deleteError);
@@ -485,14 +510,14 @@ serve(async (req) => {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
+        ...corsHeaders,
       },
     });
   } catch (error) {
     console.error('Error processing request:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
     });
   }
 });

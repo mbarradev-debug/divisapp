@@ -8,10 +8,7 @@ export { getSupabaseClient, isSupabaseConfigured } from './client';
 
 export {
   saveSubscription,
-  getSubscription,
-  getSubscriptionsByUser,
   findSubscriptionByEndpoint,
-  deleteSubscription,
   deleteSubscriptionByEndpoint,
   type RepositoryResult,
 } from './push-subscriptions';

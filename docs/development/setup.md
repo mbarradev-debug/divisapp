@@ -312,3 +312,4 @@ After setup is complete:
 1. Read the [Architecture Overview](../architecture/overview.md)
 2. Review the [Folder Structure](../architecture/folder-structure.md)
 3. Check [Development Workflows](./workflows.md) for daily practices
+4. For push notification testing, see [HTTPS Local Development](./https-local-development.md)

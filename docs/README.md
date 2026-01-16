@@ -65,6 +65,7 @@ The documentation is organized into several sections:
 
 - **[Daily Workflows](development/workflows.md)**: How to work on tasks day-to-day
 - **[Branching and Commits](development/branching-and-commits.md)**: Git conventions and practices
+- **[HTTPS Local Development](development/https-local-development.md)**: Testing Web Push with ngrok
 
 ### Releases
 
@@ -98,4 +99,5 @@ When you update the code significantly, create a new version document. Previous 
 | See what version 1.5.0 includes | [v1.5.0](versions/v1.5.0.md) |
 | Manage user settings | [Settings](features/settings.md) |
 | Learn Git conventions | [Branching and Commits](development/branching-and-commits.md) |
+| Test push notifications locally | [HTTPS Local Development](development/https-local-development.md) |
 | Understand UX choices | [UX Decisions](architecture/ux-decisions.md) |

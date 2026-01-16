@@ -56,9 +56,27 @@ export async function sendRemoteTestNotification(
 
     const result = await adapter.deliver(event);
 
+    // Diagnostic logging (remove after debugging)
+    console.log('[SendTestPush] Delivery result:', {
+      eventId: result.eventId,
+      totalAttempts: result.totalAttempts,
+      successCount: result.successCount,
+      failureCount: result.failureCount,
+      attempts: result.attempts,
+    });
+
     if (result.successCount > 0) {
       return {
         success: true,
+        timestamp: new Date().toISOString(),
+      };
+    }
+
+    // If no attempts, subscriptions were not found
+    if (result.totalAttempts === 0) {
+      return {
+        success: false,
+        error: 'No hay suscripciones activas. Intenta desactivar y volver a activar las notificaciones.',
         timestamp: new Date().toISOString(),
       };
     }

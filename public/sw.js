@@ -16,14 +16,21 @@
 
 // Push event - show notification when push message received
 self.addEventListener('push', (event) => {
+  console.log('[SW] Push event received');
+
   if (!event.data) {
+    console.log('[SW] No data in push event');
     return;
   }
+
+  console.log('[SW] Push data (text):', event.data.text());
 
   let payload;
   try {
     payload = event.data.json();
-  } catch {
+    console.log('[SW] Parsed payload:', payload);
+  } catch (e) {
+    console.log('[SW] Failed to parse JSON:', e);
     // Fallback for text-only messages
     payload = {
       title: 'DivisApp',
@@ -49,7 +56,12 @@ self.addEventListener('push', (event) => {
     requireInteraction: false,
   };
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  console.log('[SW] Showing notification:', title, options);
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+      .then(() => console.log('[SW] Notification shown'))
+      .catch((err) => console.error('[SW] Failed to show notification:', err))
+  );
 });
 
 // Notification click - open the app
