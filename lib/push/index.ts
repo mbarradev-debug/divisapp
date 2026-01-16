@@ -20,3 +20,17 @@ export {
   usePushSubscription,
   type UsePushSubscriptionReturn,
 } from './use-push-subscription';
+
+// Test-only exports (for development/testing purposes)
+export {
+  createTestNotification,
+  generateTestEventId,
+  type TestNotificationTemplate,
+  type TestNotificationResult,
+} from './test-notification';
+
+export {
+  sendLocalTestNotification,
+  sendRemoteTestNotification,
+  sendTestNotificationFromTemplate,
+} from './send-test-push';
