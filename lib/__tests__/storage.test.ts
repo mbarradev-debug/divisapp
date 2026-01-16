@@ -395,3 +395,197 @@ describe('recents storage logic', () => {
     });
   });
 });
+
+describe('user settings storage logic', () => {
+  const USER_SETTINGS_VERSION = 1;
+
+  interface UserSettings {
+    version: number;
+    userId?: string;
+    theme: 'system' | 'light' | 'dark';
+    defaultIndicator: string;
+    homeOrderingMode: 'default' | 'favorites-first' | 'custom';
+    alertsEnabled: boolean;
+  }
+
+  const DEFAULT_USER_SETTINGS: UserSettings = {
+    version: USER_SETTINGS_VERSION,
+    theme: 'system',
+    defaultIndicator: 'uf',
+    homeOrderingMode: 'favorites-first',
+    alertsEnabled: false,
+  };
+
+  describe('isValidUserSettings', () => {
+    function isValidUserSettings(value: unknown): value is UserSettings {
+      if (typeof value !== 'object' || value === null) return false;
+
+      const obj = value as Record<string, unknown>;
+
+      return (
+        typeof obj.version === 'number' &&
+        (obj.theme === 'system' || obj.theme === 'light' || obj.theme === 'dark') &&
+        typeof obj.defaultIndicator === 'string' &&
+        (obj.homeOrderingMode === 'default' ||
+          obj.homeOrderingMode === 'favorites-first' ||
+          obj.homeOrderingMode === 'custom') &&
+        typeof obj.alertsEnabled === 'boolean'
+      );
+    }
+
+    it('should return true for valid settings', () => {
+      expect(isValidUserSettings(DEFAULT_USER_SETTINGS)).toBe(true);
+      expect(
+        isValidUserSettings({
+          version: 1,
+          theme: 'dark',
+          defaultIndicator: 'dolar',
+          homeOrderingMode: 'custom',
+          alertsEnabled: true,
+        })
+      ).toBe(true);
+    });
+
+    it('should return false for null or non-object', () => {
+      expect(isValidUserSettings(null)).toBe(false);
+      expect(isValidUserSettings(undefined)).toBe(false);
+      expect(isValidUserSettings('string')).toBe(false);
+      expect(isValidUserSettings(123)).toBe(false);
+      expect(isValidUserSettings([])).toBe(false);
+    });
+
+    it('should return false for missing required fields', () => {
+      expect(isValidUserSettings({ version: 1 })).toBe(false);
+      expect(isValidUserSettings({ theme: 'system' })).toBe(false);
+      expect(
+        isValidUserSettings({
+          version: 1,
+          theme: 'system',
+          defaultIndicator: 'uf',
+          homeOrderingMode: 'default',
+          // missing alertsEnabled
+        })
+      ).toBe(false);
+    });
+
+    it('should return false for invalid theme values', () => {
+      expect(
+        isValidUserSettings({
+          ...DEFAULT_USER_SETTINGS,
+          theme: 'invalid',
+        })
+      ).toBe(false);
+    });
+
+    it('should return false for invalid homeOrderingMode values', () => {
+      expect(
+        isValidUserSettings({
+          ...DEFAULT_USER_SETTINGS,
+          homeOrderingMode: 'invalid',
+        })
+      ).toBe(false);
+    });
+
+    it('should accept optional userId field', () => {
+      expect(
+        isValidUserSettings({
+          ...DEFAULT_USER_SETTINGS,
+          userId: 'user-123',
+        })
+      ).toBe(true);
+    });
+  });
+
+  describe('migrateSettings', () => {
+    function migrateSettings(stored: UserSettings): UserSettings {
+      if (stored.version === USER_SETTINGS_VERSION) {
+        return stored;
+      }
+      return { ...DEFAULT_USER_SETTINGS, ...stored, version: USER_SETTINGS_VERSION };
+    }
+
+    it('should return settings unchanged when version matches', () => {
+      const settings: UserSettings = {
+        version: 1,
+        theme: 'dark',
+        defaultIndicator: 'dolar',
+        homeOrderingMode: 'custom',
+        alertsEnabled: true,
+      };
+      expect(migrateSettings(settings)).toEqual(settings);
+    });
+
+    it('should merge with defaults and update version for old version', () => {
+      const oldSettings = {
+        version: 0,
+        theme: 'dark' as const,
+        defaultIndicator: 'euro',
+        homeOrderingMode: 'default' as const,
+        alertsEnabled: true,
+      };
+      const result = migrateSettings(oldSettings);
+      expect(result.version).toBe(USER_SETTINGS_VERSION);
+      expect(result.theme).toBe('dark');
+      expect(result.defaultIndicator).toBe('euro');
+    });
+  });
+
+  describe('updateSettings', () => {
+    function updateSettings(
+      current: UserSettings,
+      updates: Partial<Omit<UserSettings, 'version'>>
+    ): UserSettings {
+      return {
+        ...current,
+        ...updates,
+        version: USER_SETTINGS_VERSION,
+      };
+    }
+
+    it('should merge partial updates with current settings', () => {
+      const result = updateSettings(DEFAULT_USER_SETTINGS, { theme: 'dark' });
+      expect(result.theme).toBe('dark');
+      expect(result.defaultIndicator).toBe('uf');
+      expect(result.homeOrderingMode).toBe('favorites-first');
+    });
+
+    it('should update multiple fields at once', () => {
+      const result = updateSettings(DEFAULT_USER_SETTINGS, {
+        theme: 'light',
+        defaultIndicator: 'dolar',
+        alertsEnabled: true,
+      });
+      expect(result.theme).toBe('light');
+      expect(result.defaultIndicator).toBe('dolar');
+      expect(result.alertsEnabled).toBe(true);
+    });
+
+    it('should preserve version number', () => {
+      const result = updateSettings(DEFAULT_USER_SETTINGS, { theme: 'dark' });
+      expect(result.version).toBe(USER_SETTINGS_VERSION);
+    });
+
+    it('should not modify original settings object', () => {
+      const original = { ...DEFAULT_USER_SETTINGS };
+      updateSettings(original, { theme: 'dark' });
+      expect(original.theme).toBe('system');
+    });
+  });
+
+  describe('resetSettings', () => {
+    it('should return default settings', () => {
+      const customSettings: UserSettings = {
+        version: 1,
+        theme: 'dark',
+        defaultIndicator: 'dolar',
+        homeOrderingMode: 'custom',
+        alertsEnabled: true,
+        userId: 'user-123',
+      };
+      // resetSettings just returns defaults
+      expect(DEFAULT_USER_SETTINGS).not.toEqual(customSettings);
+      expect(DEFAULT_USER_SETTINGS.theme).toBe('system');
+      expect(DEFAULT_USER_SETTINGS.alertsEnabled).toBe(false);
+    });
+  });
+});

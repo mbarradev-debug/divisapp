@@ -1,8 +1,14 @@
 import { useSyncExternalStore, useCallback } from 'react';
+import {
+  type UserSettings,
+  DEFAULT_USER_SETTINGS,
+  USER_SETTINGS_VERSION,
+} from './domain/user-settings';
 
 const CONVERSION_STORAGE_KEY = 'divisapp_last_conversion';
 const FAVORITES_STORAGE_KEY = 'divisapp_favorites';
 const RECENTS_STORAGE_KEY = 'divisapp_recents';
+const USER_SETTINGS_STORAGE_KEY = 'divisapp_user_settings';
 const MAX_RECENTS = 5;
 
 export interface ConversionResultSnapshot {
@@ -554,5 +560,134 @@ export function useNotificationPreferences(): UseNotificationPreferencesReturn {
     setSensitivity,
     setQuietHours,
     setMaxDaily,
+  };
+}
+
+// User settings storage
+//
+// Hydration strategy:
+// - Server render uses DEFAULT_USER_SETTINGS (getServerSnapshot)
+// - Client hydration reads from localStorage (getSnapshot)
+// - useSyncExternalStore ensures no hydration mismatch by using different
+//   snapshots for server vs client, then reconciling after mount
+//
+// Version handling:
+// - Stored settings include a version number
+// - If stored version < current version, we could migrate (future)
+// - If stored data is invalid or version is incompatible, fall back to defaults
+
+function isValidUserSettings(value: unknown): value is UserSettings {
+  if (typeof value !== 'object' || value === null) return false;
+
+  const obj = value as Record<string, unknown>;
+
+  return (
+    typeof obj.version === 'number' &&
+    (obj.theme === 'system' || obj.theme === 'light' || obj.theme === 'dark') &&
+    typeof obj.defaultIndicator === 'string' &&
+    (obj.homeOrderingMode === 'default' ||
+      obj.homeOrderingMode === 'favorites-first' ||
+      obj.homeOrderingMode === 'custom') &&
+    typeof obj.alertsEnabled === 'boolean'
+  );
+}
+
+function migrateSettings(stored: UserSettings): UserSettings {
+  // Future migrations would go here, e.g.:
+  // if (stored.version === 1) { stored = migrateV1toV2(stored); }
+  // For now, just ensure version is current
+  if (stored.version === USER_SETTINGS_VERSION) {
+    return stored;
+  }
+  // Unknown version: merge with defaults, preserving valid fields
+  return { ...DEFAULT_USER_SETTINGS, ...stored, version: USER_SETTINGS_VERSION };
+}
+
+function getStoredUserSettings(): UserSettings {
+  if (typeof window === 'undefined') return DEFAULT_USER_SETTINGS;
+
+  try {
+    const stored = localStorage.getItem(USER_SETTINGS_STORAGE_KEY);
+    if (!stored) return DEFAULT_USER_SETTINGS;
+
+    const parsed = JSON.parse(stored);
+
+    if (isValidUserSettings(parsed)) {
+      return migrateSettings(parsed);
+    }
+
+    return DEFAULT_USER_SETTINGS;
+  } catch {
+    return DEFAULT_USER_SETTINGS;
+  }
+}
+
+function setStoredUserSettings(settings: UserSettings): void {
+  if (typeof window === 'undefined') return;
+
+  try {
+    localStorage.setItem(USER_SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+  } catch {
+    // Silently fail if localStorage is unavailable
+  }
+}
+
+let userSettingsListeners: Array<() => void> = [];
+let cachedUserSettings: UserSettings | null = null;
+
+function subscribeUserSettings(listener: () => void): () => void {
+  userSettingsListeners = [...userSettingsListeners, listener];
+  return () => {
+    userSettingsListeners = userSettingsListeners.filter((l) => l !== listener);
+  };
+}
+
+function getUserSettingsSnapshot(): UserSettings {
+  if (cachedUserSettings === null) {
+    cachedUserSettings = getStoredUserSettings();
+  }
+  return cachedUserSettings;
+}
+
+function getUserSettingsServerSnapshot(): UserSettings {
+  return DEFAULT_USER_SETTINGS;
+}
+
+function updateUserSettings(newSettings: UserSettings): void {
+  cachedUserSettings = newSettings;
+  setStoredUserSettings(newSettings);
+  userSettingsListeners.forEach((listener) => listener());
+}
+
+interface UseUserSettingsReturn {
+  settings: UserSettings;
+  updateSettings: (updates: Partial<Omit<UserSettings, 'version'>>) => void;
+  resetSettings: () => void;
+}
+
+export function useUserSettings(): UseUserSettingsReturn {
+  const settings = useSyncExternalStore(
+    subscribeUserSettings,
+    getUserSettingsSnapshot,
+    getUserSettingsServerSnapshot
+  );
+
+  const update = useCallback((updates: Partial<Omit<UserSettings, 'version'>>) => {
+    const current = getUserSettingsSnapshot();
+    updateUserSettings({
+      ...current,
+      ...updates,
+      version: USER_SETTINGS_VERSION,
+    });
+  }, []);
+
+  const reset = useCallback(() => {
+    updateUserSettings(DEFAULT_USER_SETTINGS);
+  }, []);
+
+  return {
+    settings,
+    updateSettings: update,
+    resetSettings: reset,
   };
 }
